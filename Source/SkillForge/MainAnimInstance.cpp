@@ -36,21 +36,6 @@ void UMainAnimInstance::UpdateMainAnimation()
 
         FVector LocalSpeed = Pawn->GetActorRotation().UnrotateVector(Speed);
 
-        //bIsInAir = Pawn->GetMovementComponent()->IsFalling();
-
-        // Checking Just Falling and Jump Falling
-        // if(bIsInAir)
-        // {
-        //     if(GetWorld()->GetFirstPlayerController()->IsInputKeyDown(EKeys::SpaceBar))
-        //     {
-        //         bInAirWithJump = true;
-        //     }
-        // }
-        // else
-        // {
-        //     bInAirWithJump = false;
-        // }
-
         if(Main == nullptr)
         {
             Main = Cast<AMain>(Pawn);
