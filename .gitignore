@@ -1,0 +1,11 @@
+/.ignore
+/.vscode
+/Binaries
+/Config
+/Content
+/DerivedDataCache
+/Intermediate
+/Platforms
+/Saved
+/SkillForge.code-workspace
+/SkillForge.uproject
