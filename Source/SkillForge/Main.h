@@ -60,6 +60,10 @@ public:
 	float ForwardValue;
 	float RightValue;
 
+	//ENUMS
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement | Enum")
+	EMovementStatus MovementStatus;
+
 	// Movement Function & Parameter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	float BaseLookUpRate;
@@ -77,8 +81,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement | Speed")
 	float RunSpeed;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement | Enum")
-	EMovementStatus MovementStatus;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement | Speed")
+	float RollSpeed;
 
 	// MFP - Walk
 	void MoveForward(float Value);
@@ -100,8 +104,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement | Identity")
 	bool bSpaceKeyDown;
 
+	FTimerHandle RollTimerHandle;
+
 	void SpaceKeyDown();
 	void SpaceKeyUp();
+	void StartRollState();
+	void EndRollState(EMovementStatus Status);
 
 	void SetMovementStatus(EMovementStatus Status);
 

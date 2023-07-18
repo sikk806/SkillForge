@@ -7,6 +7,7 @@
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
+#include "Engine/EngineTypes.h"
 
 // Sets default values
 AMain::AMain()
@@ -31,6 +32,7 @@ AMain::AMain()
 
 	WalkSpeed = 300.f;
 	RunSpeed = 450.f;
+	RollSpeed = 600.f;
 
 }
 
@@ -56,6 +58,20 @@ void AMain::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if(MovementStatus == EMovementStatus::EMS_Roll)
+	{
+		bSpaceKeyDown = true;
+		float CheckTime = 0;
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		AddMovementInput(Direction, 1.f);
+	}
+	else
+	{
+
+	}
+
 }
 
 // Called to bind functionality to input
@@ -67,6 +83,8 @@ void AMain::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	PlayerInputComponent->BindAction("Identity_1", IE_Pressed, this, &AMain::ShiftKeyDown);
 	PlayerInputComponent->BindAction("Identity_1", IE_Released, this, &AMain::ShiftKeyUp);
+	PlayerInputComponent->BindAction("Identity_2", IE_Pressed, this, &AMain::SpaceKeyDown);
+	PlayerInputComponent->BindAction("Identity_2", IE_Released, this, &AMain::SpaceKeyUp);
 	
 	PlayerInputComponent->BindAxis("MoveForward", this, &AMain::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMain::MoveRight);
@@ -78,20 +96,21 @@ void AMain::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void AMain::MoveForward(float Value)
 {
 	ForwardValue = Value;
-	if (Controller != nullptr && Value != 0.f)
+	if (Controller != nullptr && Value != 0.f && !bSpaceKeyDown)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		AddMovementInput(Direction, Value);
+
+		AddMovementInput(Direction, Value);	
 	}
 }
 
 void AMain::MoveRight(float Value)
 {
 	RightValue = Value;
-	if (Controller != nullptr && Value != 0.f)
+	if (Controller != nullptr && Value != 0.f && !bSpaceKeyDown)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
@@ -137,28 +156,68 @@ void AMain::SetMovementStatus(EMovementStatus Status)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
 	}
+	else if(MovementStatus == EMovementStatus::EMS_Roll)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = RollSpeed;
+	}
 }
 
 void AMain::ShiftKeyDown()
 {
-	bShiftKeyDown = true;
-	SetMovementStatus(EMovementStatus::EMS_Run);
+	if(!bSpaceKeyDown)
+	{
+		bShiftKeyDown = true;
+		SetMovementStatus(EMovementStatus::EMS_Run);
+	}
 }
 
 void AMain::ShiftKeyUp()
 {
-	bShiftKeyDown = false;
-	SetMovementStatus(EMovementStatus::EMS_IdleWalk);
+	if(!bSpaceKeyDown)
+	{
+		bShiftKeyDown = false;
+		SetMovementStatus(EMovementStatus::EMS_IdleWalk);
+	}
 }
 
 void AMain::SpaceKeyDown()
 {
-	bSpaceKeyDown = true;
-	SetMovementStatus(EMovementStatus::EMS_Roll);
+	if(!bSpaceKeyDown)
+	{
+		EMovementStatus Status;
+		Status = MovementStatus;
+		bSpaceKeyDown = true;
+		SetMovementStatus(EMovementStatus::EMS_Roll);
+
+		// Keep EMS After Rolling.
+		FTimerDelegate TimerDelegate;
+		TimerDelegate.BindLambda([this, Status]()
+		{
+    		EndRollState(Status);
+		});
+
+		GetWorldTimerManager().SetTimer(RollTimerHandle, TimerDelegate, 1.0f, false);
+		//GetWorldTimerManager().SetTimer(RollTimerHandle, this, &AMain::EndRollState, 1.0f, false);
+	}
 	
 }
 
 void AMain::SpaceKeyUp()
 {
-	bSpaceKeyDown = false;
+	//bSpaceKeyDown = false;
+}
+
+void AMain::StartRollState()
+{
+
+}
+
+// Set EMS after Rolling.
+void AMain::EndRollState(EMovementStatus Status)
+{
+	if(MovementStatus == EMovementStatus::EMS_Roll)
+	{
+		bSpaceKeyDown = false;
+		SetMovementStatus(Status);
+	}
 }
