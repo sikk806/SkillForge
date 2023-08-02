@@ -56,6 +56,8 @@ public:
 	FORCEINLINE class USpringArmComponent* GetSpringArm() { return SpringArm; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() { return FollowCamera; }
 
+	void ZoomCamera(float Value);
+
 	// Use In MainAnimInstance
 	float ForwardValue;
 	float RightValue;
@@ -103,6 +105,9 @@ public:
 	// MFP - Identity_2
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement | Identity")
 	bool bSpaceKeyDown;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement | Identity")
+	bool bRolling;
 
 	FTimerHandle RollTimerHandle;
 

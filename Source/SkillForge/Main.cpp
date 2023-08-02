@@ -17,14 +17,14 @@ AMain::AMain()
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	SpringArm->SetupAttachment(GetRootComponent());
-	SpringArm->TargetArmLength = 100.f;
+	SpringArm->TargetArmLength = 1000.f;
 	SpringArm->bUsePawnControlRotation = true;
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
-	GetCharacterMovement()->bOrientRotationToMovement = false; // Character moves in the direction of input.
+	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 540.f, 0.f);
 
 	BaseLookUpRate = 55.f;
@@ -61,10 +61,12 @@ void AMain::Tick(float DeltaTime)
 	if(MovementStatus == EMovementStatus::EMS_Roll)
 	{
 		bSpaceKeyDown = true;
-		float CheckTime = 0;
+		// World Rotation
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+		FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
 		AddMovementInput(Direction, 1.f);
 	}
 	else
@@ -90,7 +92,13 @@ void AMain::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMain::MoveRight);
 	PlayerInputComponent->BindAxis("TurnRate", this, &AMain::TurnRate);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AMain::LookUpRate);
+	PlayerInputComponent->BindAxis("Zoom", this, &AMain::ZoomCamera);
 	
+}
+
+void AMain::ZoomCamera(float Value)
+{
+	SpringArm->TargetArmLength = FMath::Clamp(SpringArm->TargetArmLength + Value*50, 600.f, 1000.f);
 }
 
 void AMain::MoveForward(float Value)
@@ -101,8 +109,7 @@ void AMain::MoveForward(float Value)
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
 
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
+		FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		AddMovementInput(Direction, Value);	
 	}
 }
@@ -122,27 +129,32 @@ void AMain::MoveRight(float Value)
 
 void AMain::LookUpRate(float rate)
 {
-	float CameraPitch = GetControlRotation().Pitch;
-	float NewCameraPitch = CameraPitch + rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds();
-	float DeltaPitch = rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds();
+	if (!bSpaceKeyDown)
+	{
+		float CameraPitch = GetControlRotation().Pitch;
+		float NewCameraPitch = CameraPitch + rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds();
+		float DeltaPitch = rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds();
 
-	// 최소값과 최댓값을 지정
-	float MinPitch = 325.f;
-	float MaxPitch = 350.f;
+		// 최소값과 최댓값을 지정
+		float MinPitch = 325.f;
+		float MaxPitch = 350.f;
 
+		// NewCameraPitch 값을 MinPitch와 MaxPitch 사이로 동기화
+		NewCameraPitch = FMath::Clamp(NewCameraPitch, MinPitch, MaxPitch);
 
-	// NewCameraPitch 값을 MinPitch와 MaxPitch 사이로 동기화
-	NewCameraPitch = FMath::Clamp(NewCameraPitch, MinPitch, MaxPitch);
-
-	// SetControlRotation을 사용하여 Pitch 값을 설정
-	FRotator NewControlRotation = GetControlRotation();
-	NewControlRotation.Pitch = NewCameraPitch;
-	Controller->SetControlRotation(NewControlRotation);
+		// SetControlRotation을 사용하여 Pitch 값을 설정
+		FRotator NewControlRotation = GetControlRotation();
+		NewControlRotation.Pitch = NewCameraPitch;
+		Controller->SetControlRotation(NewControlRotation);
+	}
 }
 
 void AMain::TurnRate(float rate)
 {
-	AddControllerYawInput(rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	if(!bSpaceKeyDown)
+	{
+		AddControllerYawInput(rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	}
 }
 
 void AMain::SetMovementStatus(EMovementStatus Status)
@@ -218,6 +230,7 @@ void AMain::EndRollState(EMovementStatus Status)
 	if(MovementStatus == EMovementStatus::EMS_Roll)
 	{
 		bSpaceKeyDown = false;
+		bRolling = false;
 		SetMovementStatus(Status);
 	}
 }
