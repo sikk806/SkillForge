@@ -27,6 +27,15 @@ AMain::AMain()
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 540.f, 0.f);
 
+	MaxHealth = 100;
+	Health = 100;
+
+	MaxIdentity = 100;
+	Identity = 100;
+
+	MaxMP = 100;
+	MP = 100;
+
 	BaseLookUpRate = 55.f;
 	BaseTurnRate = 55.f;
 

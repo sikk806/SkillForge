@@ -19,12 +19,16 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void UpdateLichAnimation();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
+	float MovementSpeed;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 	class APawn* Pawn;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 	class ALich* Lich;
+
 
 
 };
