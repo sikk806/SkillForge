@@ -2,6 +2,7 @@
 
 
 #include "Main.h"
+#include "MainAnimInstance.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
@@ -26,6 +27,9 @@ AMain::AMain()
 
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 540.f, 0.f);
+
+	FV = 0;
+	RV = 0;
 
 	MaxHealth = 100;
 	Health = 100;
@@ -67,16 +71,18 @@ void AMain::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if(MovementStatus == EMovementStatus::EMS_RollStart)
+	{
+		SetMovementStatus(EMovementStatus::EMS_Roll);
+		FV = ForwardValue;
+		RV = RightValue;
+	}
+
 	if(MovementStatus == EMovementStatus::EMS_Roll)
 	{
 		bSpaceKeyDown = true;
-		// World Rotation
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
-
-		FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
-		AddMovementInput(Direction, 1.f);
+		MoveForward(FV);
+		MoveRight(RV);
 	}
 	else
 	{
@@ -119,6 +125,16 @@ void AMain::MoveForward(float Value)
 		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
 
 		FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		
+		AddMovementInput(Direction, Value);	
+	}
+	else if(bSpaceKeyDown)
+	{
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+
+		FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		
 		AddMovementInput(Direction, Value);	
 	}
 }
@@ -126,7 +142,7 @@ void AMain::MoveForward(float Value)
 void AMain::MoveRight(float Value)
 {
 	RightValue = Value;
-	if (Controller != nullptr && Value != 0.f && !bSpaceKeyDown)
+	if (Controller != nullptr && Value != 0.f)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
@@ -208,7 +224,7 @@ void AMain::SpaceKeyDown()
 		EMovementStatus Status;
 		Status = MovementStatus;
 		bSpaceKeyDown = true;
-		SetMovementStatus(EMovementStatus::EMS_Roll);
+		SetMovementStatus(EMovementStatus::EMS_RollStart);
 
 		// Keep EMS After Rolling.
 		FTimerDelegate TimerDelegate;
@@ -240,6 +256,8 @@ void AMain::EndRollState(EMovementStatus Status)
 	{
 		bSpaceKeyDown = false;
 		bRolling = false;
+		FV = 0;
+		RV = 0;
 		SetMovementStatus(Status);
 	}
 }

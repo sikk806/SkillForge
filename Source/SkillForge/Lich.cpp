@@ -28,6 +28,9 @@ ALich::ALich()
 
 	bAttack = false;
 
+	MaxHealth = 10000000;
+	Health = 1234567; 
+
 }
 
 void ALich::BeginPlay()
@@ -46,7 +49,7 @@ void ALich::BeginPlay()
 	Laser->OnComponentBeginOverlap.AddDynamic(this, &ALich::LaserOverlapBegin);
 
 	Laser->SetGenerateOverlapEvents(false);
-	LaserParticle->SetGenerateOverlapEvents(false);\
+	LaserParticle->SetGenerateOverlapEvents(false);
 }
 
 void ALich::Tick(float DeltaTime)

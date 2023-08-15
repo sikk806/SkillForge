@@ -11,6 +11,7 @@ enum class EMovementStatus : uint8
 {
 	EMS_IdleWalk UMETA(DisplayName = "IdleWalk"),
 	EMS_Run UMETA(DisplayName = "Run"),
+	EMS_RollStart UMETA(DisplayName = "RollStart"),
 	EMS_Roll UMETA(DisplayName = "Roll"),
 };
 
@@ -61,6 +62,10 @@ public:
 	// Use In MainAnimInstance
 	float ForwardValue;
 	float RightValue;
+
+	// Use In RollStart
+	float FV; // Save For ForwardValue During Rolling
+	float RV; // Save For RightValue During Rolling
 
 	//ENUMS
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement | Enum")

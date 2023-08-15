@@ -30,6 +30,10 @@ void UMainAnimInstance::UpdateMainAnimation()
     {
         // Movement Speed
         Direction = CalculateAngleBetweenVectors(FVector(Main->ForwardValue, 0, 0), FVector(0, Main->RightValue, 0));
+        if(Main->MovementStatus == EMovementStatus::EMS_Roll)
+        {
+            Direction = CalculateAngleBetweenVectors(FVector(Main->FV, 0, 0), FVector(0, Main->RV, 0));
+        }
         FVector Speed = Pawn->GetVelocity();
         FVector LateralSpeed = FVector(Speed.X, Speed.Y, 0.f);
         MovementSpeed = LateralSpeed.Size();
