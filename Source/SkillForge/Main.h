@@ -53,6 +53,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UInputComponent* MyInputComponent;
+
 	// Get Camera Setting
 	FORCEINLINE class USpringArmComponent* GetSpringArm() { return SpringArm; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() { return FollowCamera; }

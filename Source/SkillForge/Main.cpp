@@ -98,6 +98,8 @@ void AMain::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	check(PlayerInputComponent);
 
+	MyInputComponent = PlayerInputComponent;
+
 	PlayerInputComponent->BindAction("Identity_1", IE_Pressed, this, &AMain::ShiftKeyDown);
 	PlayerInputComponent->BindAction("Identity_1", IE_Released, this, &AMain::ShiftKeyUp);
 	PlayerInputComponent->BindAction("Identity_2", IE_Pressed, this, &AMain::SpaceKeyDown);
@@ -135,20 +137,29 @@ void AMain::MoveForward(float Value)
 
 		FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		
-		AddMovementInput(Direction, Value);	
+		AddMovementInput(Direction, FV);	
 	}
 }
 
 void AMain::MoveRight(float Value)
 {
 	RightValue = Value;
-	if (Controller != nullptr && Value != 0.f)
+	if (Controller != nullptr && Value != 0.f && !bSpaceKeyDown)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		AddMovementInput(Direction, Value);
+	}
+	else if(bSpaceKeyDown)
+	{
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+
+		FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		
+		AddMovementInput(Direction, RV);
 	}
 }
 
