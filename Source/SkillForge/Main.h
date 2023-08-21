@@ -16,15 +16,16 @@ enum class EMovementStatus : uint8
 };
 
 UENUM(BlueprintType)
-enum class EStaminaStatus : uint8
+enum class EIdentityStatus : uint8
 {
-	ESS_Normal UMETA(DisplayName = "Normal"),
-	ESS_SteminaDecrease UMETA(DisplayName = "SteminaDecrease"),
-	ESS_Exhausted UMETA(DisplayName = "Exhausted"),
-	ESS_ExhaustedRecovering UMETA(DisplayName = "ExhaustedRecovering"),
-	ESS_Rolling UMETA(DisplayName = "Rolling"),
+	EIS_Normal UMETA(DisplayName = "Normal"),
+	EIS_SteminaDecrease UMETA(DisplayName = "SteminaDecrease"),
+	EIS_BelowMinimum UMETA(DisplayName = "BelowMinimum"),
+	EIS_Exhausted UMETA(DisplayName = "Exhausted"),
+	EIS_ExhaustedRecovering UMETA(DisplayName = "ExhaustedRecovering"),
+	EIS_Rolling UMETA(DisplayName = "Rolling"),
 
-	ESS_MAX UMETA(DisplayName = "DefaultMax")
+	EIS_MAX UMETA(DisplayName = "DefaultMax")
 };
 
 UCLASS()
@@ -35,6 +36,10 @@ class SKILLFORGE_API AMain : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AMain();
+
+	// Equipped Setting
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Items")
+	class ASword* EquippedSword;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* SpringArm;
@@ -59,6 +64,9 @@ public:
 	FORCEINLINE class USpringArmComponent* GetSpringArm() { return SpringArm; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() { return FollowCamera; }
 
+	// Equipped Setting
+	FORCEINLINE void SetEquippedWeapon(ASword* WeaponToSet) {EquippedSword = WeaponToSet;}
+
 	void ZoomCamera(float Value);
 
 	// Use In MainAnimInstance
@@ -70,8 +78,13 @@ public:
 	float RV; // Save For RightValue During Rolling
 
 	//ENUMS
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement | Enum")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enum | Movement")
 	EMovementStatus MovementStatus;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enum | Identity")
+	EIdentityStatus IdentityStatus; 
+
+	FORCEINLINE void SetIdentityStatus(EIdentityStatus IStatus) { IdentityStatus = IStatus; }
 
 	// Status
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
@@ -91,6 +104,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float MP;
+
+	// Identity Info
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Identity")
+	float IdentityDrainRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Identity")
+	float MinIdentity;
 
 	// Movement Function & Parameter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")

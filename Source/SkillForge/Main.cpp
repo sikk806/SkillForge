@@ -35,7 +35,9 @@ AMain::AMain()
 	Health = 100;
 
 	MaxIdentity = 100;
+	MinIdentity = 0	;
 	Identity = 100;
+	IdentityDrainRate = 10;
 
 	MaxMP = 100;
 	MP = 100;
@@ -71,11 +73,24 @@ void AMain::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	/* 1. Warrior Iden : Roll
+	Roll Can Avoid Monster's Attack. But using the roll reduces the identity of 30.
+	This Identity can't use under Identity 30.	
+	*/
 	if(MovementStatus == EMovementStatus::EMS_RollStart)
 	{
-		SetMovementStatus(EMovementStatus::EMS_Roll);
-		FV = ForwardValue;
-		RV = RightValue;
+		if(Identity >= 30.f)
+		{
+			Identity -= 30.f;
+			SetMovementStatus(EMovementStatus::EMS_Roll);
+			FV = ForwardValue;
+			RV = RightValue;
+		}
+		else
+		{
+			bSpaceKeyDown = false;
+			bRolling = false;
+		}
 	}
 
 	if(MovementStatus == EMovementStatus::EMS_Roll)
@@ -86,7 +101,109 @@ void AMain::Tick(float DeltaTime)
 	}
 	else
 	{
-
+		// Using Warrior Iden: Move Faster.
+		/* 2. Warrior Iden : Sprint
+		|Exhausted : 0|MinIdentity -----|Identity--------------------------|
+		2-1. 1/4 Status - Normal
+		2-1-1. When bShiftKeyDown : Can run until Identity - DeltaIdentity <= MinIdentity and becomes EMS_run.
+			   If Identity becomes MinIdentity Character still can Run and becomes EIS_BelowMinimum.
+		2-1-2. When bShiftKeyUp : Just Recovering Identity until Identity + DeltaIdentity >= MaxIdentity and becomes EMS_IdelWalk.
+		2-2. 2/4 Status - BelowMinimum
+		2-2-1. When bShiftKeyDown : Can run until becomes '0'.
+			   If Identity becomes '0' then Character becomes EMS_IdleWalk and EIS_Exhausted.
+		2-2-2. When bShiftKeyUp : Just Recovering Identity until Identity + DeltaIdentity >= MinIdentity and becomes EMS_IdleWalk.
+		       and becomes EMS_IdelWalk and EIS_Normal.
+		2-3. 3/4 Status - Exhausted
+		2-3-1. When bShiftKeyDown : Exhausted becomes when Identity is 0 with ShiftKeyDown.
+		       Can't run anymore and becomes EMS_IdleWalk until Identity recovers to MinIdentity.
+		2-3-2. When bShiftKeyUp : Becomes EIS_ExhaustedRecovering.
+		2-4. 4/4 Status - ExhaustedRecovering
+		2-4-1. Shift is not working. Recovering Identity until Identity + DeltaIdentity >= MinIdentity and becomes EIS_Normal and EMS_IdleWalk.
+		*/
+		float DeltaIdentity = IdentityDrainRate * DeltaTime;
+		switch(IdentityStatus)
+		{
+		case EIdentityStatus::EIS_Normal:
+			if(bShiftKeyDown)
+			{
+				if(Identity - DeltaIdentity <= MinIdentity)
+				{
+					SetIdentityStatus(EIdentityStatus::EIS_BelowMinimum);
+					Identity -= DeltaIdentity;
+				}
+				else
+				{
+					Identity -= DeltaIdentity;
+				}
+				SetMovementStatus(EMovementStatus::EMS_Run);
+			}
+			else
+			{
+				if(Identity + DeltaIdentity >= MaxIdentity)
+				{
+					Identity = MaxIdentity;
+				}
+				else
+				{
+					Identity += DeltaIdentity;
+				}
+				SetMovementStatus(EMovementStatus::EMS_IdleWalk);
+			}
+			break;
+		case EIdentityStatus::EIS_BelowMinimum:
+			if(bShiftKeyDown)
+			{
+				if(Identity - DeltaIdentity <= 0.f)
+				{
+					SetIdentityStatus(EIdentityStatus::EIS_Exhausted);
+					Identity = 0.f;
+					SetMovementStatus(EMovementStatus::EMS_IdleWalk);
+				}
+				else 
+				{
+					Identity -= DeltaIdentity;
+					SetMovementStatus(EMovementStatus::EMS_Run);
+				}
+			}
+			else
+			{
+				if(Identity + DeltaIdentity >= MinIdentity)
+				{
+					SetIdentityStatus(EIdentityStatus::EIS_Normal);
+					Identity += DeltaIdentity;
+				}
+				else
+				{
+					Identity += DeltaIdentity;
+				}
+				SetMovementStatus(EMovementStatus::EMS_IdleWalk);
+			}
+			break;
+		case EIdentityStatus::EIS_Exhausted:
+			if (bShiftKeyDown)
+			{
+				Identity = 0.f;
+			}
+			else
+			{
+				Identity += DeltaIdentity;
+				SetIdentityStatus(EIdentityStatus::EIS_ExhaustedRecovering);
+			}
+			SetMovementStatus(EMovementStatus::EMS_IdleWalk);
+			break;
+		case EIdentityStatus::EIS_ExhaustedRecovering:
+			if(Identity + DeltaIdentity >= MinIdentity)
+			{
+				Identity += DeltaIdentity;
+				SetIdentityStatus(EIdentityStatus::EIS_Normal);
+			}
+			else
+			{
+				Identity += DeltaIdentity;
+			}
+			SetMovementStatus(EMovementStatus::EMS_IdleWalk);
+			break;
+		}
 	}
 
 }
@@ -215,7 +332,7 @@ void AMain::ShiftKeyDown()
 	if(!bSpaceKeyDown)
 	{
 		bShiftKeyDown = true;
-		SetMovementStatus(EMovementStatus::EMS_Run);
+		//SetMovementStatus(EMovementStatus::EMS_Run);
 	}
 }
 
@@ -224,7 +341,7 @@ void AMain::ShiftKeyUp()
 	if(!bSpaceKeyDown)
 	{
 		bShiftKeyDown = false;
-		SetMovementStatus(EMovementStatus::EMS_IdleWalk);
+		//SetMovementStatus(EMovementStatus::EMS_IdleWalk);
 	}
 }
 
