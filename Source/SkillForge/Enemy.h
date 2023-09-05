@@ -41,6 +41,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="AI")
 	class AAIController* AIController;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	class UParticleSystem* HitParticles;
 
 protected:
 	// Called when the game starts or when spawned
@@ -52,6 +55,21 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+	float WalkMaxSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+	float RunMaxSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+	float MaxHealth;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+	float Health;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+	float Damage;
 
 	UFUNCTION()
 	virtual void AgroSphereOnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);

@@ -24,12 +24,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	// Status
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
-	float MaxHealth;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
-	float Health;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Custom")
 	class UPointLightComponent* PointLightComponent;
 

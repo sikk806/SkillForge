@@ -6,6 +6,10 @@
 #include "Components/BoxComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Main.h"
+#include "Enemy.h"
+#include "Sound/SoundCue.h"
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
 
 ASword::ASword()
 {
@@ -16,6 +20,13 @@ ASword::ASword()
 
     CombatCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("CombatCollision"));
     CombatCollision->SetupAttachment(GetRootComponent());
+
+    CombatCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    CombatCollision->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+    CombatCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+    CombatCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+
+    Damage = 25.f;
 
 }
 
@@ -47,7 +58,22 @@ void ASword::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 }
 void ASword::CombatOnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-
+    if(OtherActor)
+    {
+        AEnemy* Enemy = Cast<AEnemy>(OtherActor);
+        if(Enemy)
+        {
+            if(Enemy->HitParticles)
+            {
+                const USkeletalMeshSocket* WeaponSocket = SkeletalMesh->GetSocketByName("WeaponSocket");
+                if(WeaponSocket)
+                {
+                    FVector SocketLocation = WeaponSocket->GetSocketLocation(SkeletalMesh);
+                    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Enemy->HitParticles, GetActorLocation(), FRotator(0.f), true);
+                }
+            }
+        }
+    }
 }
 
 void ASword::CombatOnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -80,7 +106,6 @@ void ASword::Equip(class AMain* Char)
         if(RightHandSocket)
         {
             RightHandSocket->AttachActor(this, Char->GetMesh());
-            
             Char->SetEquippedWeapon(this);
         }
     }

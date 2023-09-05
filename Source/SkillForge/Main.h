@@ -112,7 +112,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Identity")
 	float MinIdentity;
 
-	// Movement Function & Parameter
+	// Movement Function & Parameter (MFP)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	float BaseLookUpRate;
 
@@ -134,12 +134,18 @@ public:
 
 	// MFP - Walk
 	void MoveForward(float Value);
-
 	void MoveRight(float Value);
-
 	void LookUpRate(float rate);
-
 	void TurnRate(float rate);
+	// MFP - Attack
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement | Attack")
+	bool bAttacking;
+
+	bool bLMBDown;
+	bool bRMBDown;
+	void LMBDown();
+	void LMBUp();
+	void Attack();
 
 	// MFP - Identity_1
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement | Identity")

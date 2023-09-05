@@ -49,6 +49,10 @@ AMain::AMain()
 	RunSpeed = 450.f;
 	RollSpeed = 600.f;
 
+	bLMBDown = false;
+	bRMBDown = false;
+	bAttacking = false;
+
 }
 
 // Called when the game starts or when spawned
@@ -221,6 +225,8 @@ void AMain::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("Identity_1", IE_Released, this, &AMain::ShiftKeyUp);
 	PlayerInputComponent->BindAction("Identity_2", IE_Pressed, this, &AMain::SpaceKeyDown);
 	PlayerInputComponent->BindAction("Identity_2", IE_Released, this, &AMain::SpaceKeyUp);
+	PlayerInputComponent->BindAction("LMB", IE_Pressed, this, &AMain::LMBDown);
+	PlayerInputComponent->BindAction("LMB", IE_Released, this, &AMain::LMBUp);
 	
 	PlayerInputComponent->BindAxis("MoveForward", this, &AMain::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMain::MoveRight);
@@ -238,7 +244,7 @@ void AMain::ZoomCamera(float Value)
 void AMain::MoveForward(float Value)
 {
 	ForwardValue = Value;
-	if (Controller != nullptr && Value != 0.f && !bSpaceKeyDown)
+	if (Controller != nullptr && Value != 0.f && !bSpaceKeyDown && !bAttacking)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
@@ -261,7 +267,7 @@ void AMain::MoveForward(float Value)
 void AMain::MoveRight(float Value)
 {
 	RightValue = Value;
-	if (Controller != nullptr && Value != 0.f && !bSpaceKeyDown)
+	if (Controller != nullptr && Value != 0.f && !bSpaceKeyDown && !bAttacking)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
@@ -347,7 +353,7 @@ void AMain::ShiftKeyUp()
 
 void AMain::SpaceKeyDown()
 {
-	if(!bSpaceKeyDown)
+	if(!bSpaceKeyDown && !bAttacking)
 	{
 		EMovementStatus Status;
 		Status = MovementStatus;
@@ -388,4 +394,27 @@ void AMain::EndRollState(EMovementStatus Status)
 		RV = 0;
 		SetMovementStatus(Status);
 	}
+}
+
+void AMain::LMBDown()
+{
+	if(!bLMBDown && MovementStatus != EMovementStatus::EMS_Roll)
+	{
+		bLMBDown = true;
+		bAttacking = true;
+	}
+}
+
+void AMain::LMBUp()
+{
+	if(bLMBDown)
+	{
+		bLMBDown = false;
+		bAttacking = false;
+	}
+}
+
+void AMain::Attack()
+{
+	
 }
