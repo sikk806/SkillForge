@@ -1,11 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Main.h"
 #include "MainAnimInstance.h"
-#include "GameFramework/SpringArmComponent.h"
+
+#include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "Engine/EngineTypes.h"
@@ -13,7 +15,7 @@
 // Sets default values
 AMain::AMain()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -35,7 +37,7 @@ AMain::AMain()
 	Health = 100;
 
 	MaxIdentity = 100;
-	MinIdentity = 0	;
+	MinIdentity = 0;
 	Identity = 100;
 	IdentityDrainRate = 10;
 
@@ -49,10 +51,10 @@ AMain::AMain()
 	RunSpeed = 450.f;
 	RollSpeed = 600.f;
 
+	ContinAttack = FName("AttackA2");
 	bLMBDown = false;
 	bRMBDown = false;
 	bAttacking = false;
-
 }
 
 // Called when the game starts or when spawned
@@ -69,7 +71,6 @@ void AMain::BeginPlay()
 	// Movement Init
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	SetMovementStatus(EMovementStatus::EMS_IdleWalk);
-	
 }
 
 // Called every frame
@@ -79,11 +80,11 @@ void AMain::Tick(float DeltaTime)
 
 	/* 1. Warrior Iden : Roll
 	Roll Can Avoid Monster's Attack. But using the roll reduces the identity of 30.
-	This Identity can't use under Identity 30.	
+	This Identity can't use under Identity 30.
 	*/
-	if(MovementStatus == EMovementStatus::EMS_RollStart)
+	if (MovementStatus == EMovementStatus::EMS_RollStart)
 	{
-		if(Identity >= 30.f)
+		if (Identity >= 30.f)
 		{
 			Identity -= 30.f;
 			SetMovementStatus(EMovementStatus::EMS_Roll);
@@ -97,7 +98,7 @@ void AMain::Tick(float DeltaTime)
 		}
 	}
 
-	if(MovementStatus == EMovementStatus::EMS_Roll)
+	if (MovementStatus == EMovementStatus::EMS_Roll)
 	{
 		bSpaceKeyDown = true;
 		MoveForward(FV);
@@ -116,21 +117,21 @@ void AMain::Tick(float DeltaTime)
 		2-2-1. When bShiftKeyDown : Can run until becomes '0'.
 			   If Identity becomes '0' then Character becomes EMS_IdleWalk and EIS_Exhausted.
 		2-2-2. When bShiftKeyUp : Just Recovering Identity until Identity + DeltaIdentity >= MinIdentity and becomes EMS_IdleWalk.
-		       and becomes EMS_IdelWalk and EIS_Normal.
+			   and becomes EMS_IdelWalk and EIS_Normal.
 		2-3. 3/4 Status - Exhausted
 		2-3-1. When bShiftKeyDown : Exhausted becomes when Identity is 0 with ShiftKeyDown.
-		       Can't run anymore and becomes EMS_IdleWalk until Identity recovers to MinIdentity.
+			   Can't run anymore and becomes EMS_IdleWalk until Identity recovers to MinIdentity.
 		2-3-2. When bShiftKeyUp : Becomes EIS_ExhaustedRecovering.
 		2-4. 4/4 Status - ExhaustedRecovering
 		2-4-1. Shift is not working. Recovering Identity until Identity + DeltaIdentity >= MinIdentity and becomes EIS_Normal and EMS_IdleWalk.
 		*/
 		float DeltaIdentity = IdentityDrainRate * DeltaTime;
-		switch(IdentityStatus)
+		switch (IdentityStatus)
 		{
 		case EIdentityStatus::EIS_Normal:
-			if(bShiftKeyDown)
+			if (bShiftKeyDown)
 			{
-				if(Identity - DeltaIdentity <= MinIdentity)
+				if (Identity - DeltaIdentity <= MinIdentity)
 				{
 					SetIdentityStatus(EIdentityStatus::EIS_BelowMinimum);
 					Identity -= DeltaIdentity;
@@ -143,7 +144,7 @@ void AMain::Tick(float DeltaTime)
 			}
 			else
 			{
-				if(Identity + DeltaIdentity >= MaxIdentity)
+				if (Identity + DeltaIdentity >= MaxIdentity)
 				{
 					Identity = MaxIdentity;
 				}
@@ -155,15 +156,15 @@ void AMain::Tick(float DeltaTime)
 			}
 			break;
 		case EIdentityStatus::EIS_BelowMinimum:
-			if(bShiftKeyDown)
+			if (bShiftKeyDown)
 			{
-				if(Identity - DeltaIdentity <= 0.f)
+				if (Identity - DeltaIdentity <= 0.f)
 				{
 					SetIdentityStatus(EIdentityStatus::EIS_Exhausted);
 					Identity = 0.f;
 					SetMovementStatus(EMovementStatus::EMS_IdleWalk);
 				}
-				else 
+				else
 				{
 					Identity -= DeltaIdentity;
 					SetMovementStatus(EMovementStatus::EMS_Run);
@@ -171,7 +172,7 @@ void AMain::Tick(float DeltaTime)
 			}
 			else
 			{
-				if(Identity + DeltaIdentity >= MinIdentity)
+				if (Identity + DeltaIdentity >= MinIdentity)
 				{
 					SetIdentityStatus(EIdentityStatus::EIS_Normal);
 					Identity += DeltaIdentity;
@@ -196,7 +197,7 @@ void AMain::Tick(float DeltaTime)
 			SetMovementStatus(EMovementStatus::EMS_IdleWalk);
 			break;
 		case EIdentityStatus::EIS_ExhaustedRecovering:
-			if(Identity + DeltaIdentity >= MinIdentity)
+			if (Identity + DeltaIdentity >= MinIdentity)
 			{
 				Identity += DeltaIdentity;
 				SetIdentityStatus(EIdentityStatus::EIS_Normal);
@@ -209,11 +210,10 @@ void AMain::Tick(float DeltaTime)
 			break;
 		}
 	}
-
 }
 
 // Called to bind functionality to input
-void AMain::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AMain::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
@@ -227,18 +227,19 @@ void AMain::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("Identity_2", IE_Released, this, &AMain::SpaceKeyUp);
 	PlayerInputComponent->BindAction("LMB", IE_Pressed, this, &AMain::LMBDown);
 	PlayerInputComponent->BindAction("LMB", IE_Released, this, &AMain::LMBUp);
-	
+	PlayerInputComponent->BindAction("RMB", IE_Pressed, this, &AMain::RMBDown);
+	PlayerInputComponent->BindAction("RMB", IE_Released, this, &AMain::RMBUp);
+
 	PlayerInputComponent->BindAxis("MoveForward", this, &AMain::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMain::MoveRight);
 	PlayerInputComponent->BindAxis("TurnRate", this, &AMain::TurnRate);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AMain::LookUpRate);
 	PlayerInputComponent->BindAxis("Zoom", this, &AMain::ZoomCamera);
-	
 }
 
 void AMain::ZoomCamera(float Value)
 {
-	SpringArm->TargetArmLength = FMath::Clamp(SpringArm->TargetArmLength + Value*50, 600.f, 1000.f);
+	SpringArm->TargetArmLength = FMath::Clamp(SpringArm->TargetArmLength + Value * 50, 600.f, 1000.f);
 }
 
 void AMain::MoveForward(float Value)
@@ -250,17 +251,17 @@ void AMain::MoveForward(float Value)
 		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
 
 		FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		
-		AddMovementInput(Direction, Value);	
+
+		AddMovementInput(Direction, Value);
 	}
-	else if(bSpaceKeyDown)
+	else if (bSpaceKeyDown)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
 
 		FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		
-		AddMovementInput(Direction, FV);	
+
+		AddMovementInput(Direction, FV);
 	}
 }
 
@@ -275,13 +276,13 @@ void AMain::MoveRight(float Value)
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		AddMovementInput(Direction, Value);
 	}
-	else if(bSpaceKeyDown)
+	else if (bSpaceKeyDown)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
 
 		FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		
+
 		AddMovementInput(Direction, RV);
 	}
 }
@@ -310,7 +311,7 @@ void AMain::LookUpRate(float rate)
 
 void AMain::TurnRate(float rate)
 {
-	if(!bSpaceKeyDown)
+	if (!bSpaceKeyDown)
 	{
 		AddControllerYawInput(rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 	}
@@ -319,15 +320,15 @@ void AMain::TurnRate(float rate)
 void AMain::SetMovementStatus(EMovementStatus Status)
 {
 	MovementStatus = Status;
-	if(MovementStatus == EMovementStatus::EMS_IdleWalk)
+	if (MovementStatus == EMovementStatus::EMS_IdleWalk)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	}
-	else if(MovementStatus == EMovementStatus::EMS_Run)
+	else if (MovementStatus == EMovementStatus::EMS_Run)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
 	}
-	else if(MovementStatus == EMovementStatus::EMS_Roll)
+	else if (MovementStatus == EMovementStatus::EMS_Roll)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = RollSpeed;
 	}
@@ -335,25 +336,25 @@ void AMain::SetMovementStatus(EMovementStatus Status)
 
 void AMain::ShiftKeyDown()
 {
-	if(!bSpaceKeyDown)
+	if (!bSpaceKeyDown)
 	{
 		bShiftKeyDown = true;
-		//SetMovementStatus(EMovementStatus::EMS_Run);
+		// SetMovementStatus(EMovementStatus::EMS_Run);
 	}
 }
 
 void AMain::ShiftKeyUp()
 {
-	if(!bSpaceKeyDown)
+	if (!bSpaceKeyDown)
 	{
 		bShiftKeyDown = false;
-		//SetMovementStatus(EMovementStatus::EMS_IdleWalk);
+		// SetMovementStatus(EMovementStatus::EMS_IdleWalk);
 	}
 }
 
 void AMain::SpaceKeyDown()
 {
-	if(!bSpaceKeyDown && !bAttacking)
+	if (!bSpaceKeyDown && !bAttacking)
 	{
 		EMovementStatus Status;
 		Status = MovementStatus;
@@ -363,30 +364,26 @@ void AMain::SpaceKeyDown()
 		// Keep EMS After Rolling.
 		FTimerDelegate TimerDelegate;
 		TimerDelegate.BindLambda([this, Status]()
-		{
-    		EndRollState(Status);
-		});
+								 { EndRollState(Status); });
 
 		GetWorldTimerManager().SetTimer(RollTimerHandle, TimerDelegate, 1.0f, false);
-		//GetWorldTimerManager().SetTimer(RollTimerHandle, this, &AMain::EndRollState, 1.0f, false);
+		// GetWorldTimerManager().SetTimer(RollTimerHandle, this, &AMain::EndRollState, 1.0f, false);
 	}
-	
 }
 
 void AMain::SpaceKeyUp()
 {
-	//bSpaceKeyDown = false;
+	// bSpaceKeyDown = false;
 }
 
 void AMain::StartRollState()
 {
-
 }
 
 // Set EMS after Rolling.
 void AMain::EndRollState(EMovementStatus Status)
 {
-	if(MovementStatus == EMovementStatus::EMS_Roll)
+	if (MovementStatus == EMovementStatus::EMS_Roll)
 	{
 		bSpaceKeyDown = false;
 		bRolling = false;
@@ -398,23 +395,73 @@ void AMain::EndRollState(EMovementStatus Status)
 
 void AMain::LMBDown()
 {
-	if(!bLMBDown && MovementStatus != EMovementStatus::EMS_Roll)
+	if (!bLMBDown && !bRMBDown && (MovementStatus != EMovementStatus::EMS_Roll))
 	{
 		bLMBDown = true;
-		bAttacking = true;
+		Attack();
 	}
 }
 
 void AMain::LMBUp()
 {
-	if(bLMBDown)
+	if (bLMBDown)
 	{
 		bLMBDown = false;
-		bAttacking = false;
+	}
+}
+
+void AMain::RMBDown()
+{
+	if (!bLMBDown && !bRMBDown && (MovementStatus != EMovementStatus::EMS_Roll))
+	{
+		bRMBDown = true;
+		Attack();
+	}
+}
+
+void AMain::RMBUp()
+{
+	if (bRMBDown)
+	{
+		bRMBDown = false;
 	}
 }
 
 void AMain::Attack()
 {
-	
+	if (!bAttacking)
+	{
+		bAttacking = true;
+
+		UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+
+		if (AnimInstance && CombatMontage)
+		{
+			if (bLMBDown)
+			{
+				AnimInstance->Montage_Play(CombatMontage, 2.f);
+				AnimInstance->Montage_JumpToSection(FName("AttackA1"), CombatMontage);
+			}
+			else if (bRMBDown)
+			{
+				AnimInstance->Montage_Play(CombatMontage, 1.3f);
+				AnimInstance->Montage_JumpToSection(ContinAttack, CombatMontage);
+			}
+		}
+	}
+}
+
+void AMain::AttackEnd()
+{
+	bAttacking = false;
+	if(bLMBDown || bRMBDown)
+	{
+		if(bRMBDown)
+		{
+			if(ContinAttack == FName("AttackA2")) ContinAttack = FName("AttackA3");
+			else if(ContinAttack == FName("AttackA3")) ContinAttack = FName("AttackA4");
+			else if(ContinAttack == FName("AttackA4")) ContinAttack = FName("AttackA2");
+		}
+		Attack();
+	}
 }

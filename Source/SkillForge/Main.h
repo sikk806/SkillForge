@@ -143,9 +143,18 @@ public:
 
 	bool bLMBDown;
 	bool bRMBDown;
+	FName ContinAttack;
 	void LMBDown();
 	void LMBUp();
+	void RMBDown();
+	void RMBUp();
 	void Attack();
+
+	UFUNCTION(BlueprintCallable)
+	void AttackEnd();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement | Attack")
+	class UAnimMontage* CombatMontage;
 
 	// MFP - Identity_1
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement | Identity")
