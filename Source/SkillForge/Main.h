@@ -47,6 +47,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Controller")
+	class AMainPlayerController* MainPlayerController;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Controller")
+	FVector CombatTargetLocation;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -105,6 +111,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float MP;
 
+	// Status - Death
+	void DecrementHealth(float Amount);
+	void IncrementHealth(float Amount);
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const & DamageEvent, class AController * EventInstigator, AActor * DamageCauser) override;
+	void Die();
+
 	// Identity Info
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Identity")
 	float IdentityDrainRate;
@@ -140,6 +152,15 @@ public:
 	// MFP - Attack
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement | Attack")
 	bool bAttacking;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement | Attack")
+	bool bHasCombatTarget;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	class AEnemy* CombatTargets;
+
+	FORCEINLINE void SetCombatTarget(AEnemy* Target) { CombatTargets = Target; }
+	FORCEINLINE void SetHasCombatTarget(bool HasTarget) { bHasCombatTarget = HasTarget; };
 
 	bool bLMBDown;
 	bool bRMBDown;
@@ -179,5 +200,12 @@ public:
 
 	void SetMovementStatus(EMovementStatus Status);
 
+	// Interp When Attacking Enemy
+	float InterpSpeed;
+	bool bInterpToEnemy;
+	void SetInterpToEnemy(bool Interp);
 
+	// ect.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Particles")
+	class UParticleSystem* HitParticles;
 };

@@ -37,6 +37,15 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item | Waepon")
 	class USoundCue* OverlapSound;
 
+	// Damage
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Combat")
+	TSubclassOf<UDamageType> DamageTypeClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | Combat")
+	AController* WeaponInstigator;
+
+	FORCEINLINE void SetInstigator(AController* Inst) {WeaponInstigator = Inst;}
+
 
 protected:
 	// Called when the game starts or when spawned

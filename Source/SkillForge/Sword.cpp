@@ -56,6 +56,7 @@ void ASword::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* Othe
     Super::OnOverlapEnd(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
 
 }
+
 void ASword::CombatOnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
     if(OtherActor)
@@ -71,6 +72,10 @@ void ASword::CombatOnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AAct
                     FVector SocketLocation = WeaponSocket->GetSocketLocation(SkeletalMesh);
                     UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Enemy->HitParticles, GetActorLocation(), FRotator(0.f), true);
                 }
+            }
+            if(DamageTypeClass)
+            {
+                UGameplayStatics::ApplyDamage(Enemy, Damage, WeaponInstigator, this, DamageTypeClass);
             }
         }
     }
@@ -96,6 +101,7 @@ void ASword::Equip(class AMain* Char)
 {
     if(Char)
     {
+        SetInstigator(Char->GetController());
         // Not to Collision With Camera And Sword.
         SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
         SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);

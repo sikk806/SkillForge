@@ -52,7 +52,7 @@ void AWeapon::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* O
 		AEnemy* Enemy = Cast<AEnemy>(OtherActor);
 		if(Enemy)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Attack!"));
+			//UE_LOG(LogTemp, Warning, TEXT("Attack!"));
 		}
 ;	}
 }

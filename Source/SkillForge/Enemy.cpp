@@ -2,9 +2,14 @@
 
 
 #include "Enemy.h"
-#include "Components/SphereComponent.h"
 #include "Main.h"
 #include "AIController.h"
+#include "MainPlayerController.h"
+
+#include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/DamageType.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -20,6 +25,8 @@ AEnemy::AEnemy()
 
 	bOverlappingCombatSphere = false;
 
+	DeathDelay = 2.f;
+
 }
 
 // Called when the game starts or when spawned
@@ -30,10 +37,10 @@ void AEnemy::BeginPlay()
 	AIController = Cast<AAIController>(GetController());
 	
 	//AgroSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::AgroSphereOnOverlapBegin);
-	AgroSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemy::AgroSphereOnOverlapEnd);
+	//AgroSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemy::AgroSphereOnOverlapEnd);
 
-	CombatSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::CombatSphereOnOverlapBegin);
-	CombatSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemy::CombatSphereOnOverlapEnd);
+	//CombatSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::CombatSphereOnOverlapBegin);
+	//CombatSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemy::CombatSphereOnOverlapEnd);
 	
 }
 
@@ -72,6 +79,15 @@ void AEnemy::AgroSphereOnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AA
 		AMain* Main = Cast<AMain>(OtherActor);
 		if(Main)
 		{
+			if(Main->CombatTargets == this)
+			{
+				Main->SetCombatTarget(nullptr);
+				Main->SetHasCombatTarget(false);
+			}
+			if(Main->MainPlayerController)
+			{
+				Main->MainPlayerController->RemoveEnemyHealthBar();
+			}
 			SetEnemyMovementState(EEnemyMovementState::EMS_Idle);
 			if(AIController)
 			{
@@ -88,9 +104,18 @@ void AEnemy::CombatSphereOnOverlapBegin(UPrimitiveComponent* OverlappedComponent
 		AMain* Main = Cast<AMain>(OtherActor);
 		if(Main)
 		{
+			Main->SetCombatTarget(this);
+			Main->SetHasCombatTarget(true);
+			UE_LOG(LogTemp, Warning, TEXT("CombatSphereOnOverlapBegin"));
+			if(Main->MainPlayerController)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("CombatSphereOnOverlapBegin"));
+				Main->MainPlayerController->DisplayEnemyHealthBar();
+			}
 			CombatTarget = Main;
 			bOverlappingCombatSphere = true;
-			SetEnemyMovementState(EEnemyMovementState::EMS_Attack);
+			
+			
 		}
 	}
 }
@@ -120,10 +145,59 @@ void AEnemy::MoveToTarget(class AMain* Target)
 	{
 		FAIMoveRequest MoveRequest;
 		MoveRequest.SetGoalActor(Target);
-		MoveRequest.SetAcceptanceRadius(50.f);
+		MoveRequest.SetAcceptanceRadius(25.f);
 
 		FNavPathSharedPtr NavPath;
 		
 		AIController->MoveTo(MoveRequest, &NavPath);
 	}
+}
+
+float AEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const &DamageEvent, class AController *EventInstigator, AActor *DamageCauser)
+{
+	if (Health - DamageAmount <= 0.f)
+	{
+		Health -= DamageAmount;
+		Die();
+	}
+	else
+	{
+		Health -= DamageAmount;
+	}
+
+	return DamageAmount;
+}
+
+void AEnemy::Die()
+{
+	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance)
+	{
+		AnimInstance->Montage_Play(CombatMontage, 1.f);
+		AnimInstance->Montage_JumpToSection(FName("Death"), CombatMontage);
+	}
+	SetEnemyMovementState(EEnemyMovementState::EMS_Death);
+
+	CombatCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	AgroSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CombatSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void AEnemy::DeathEnd()
+{
+	GetMesh()->bPauseAnims = true;
+	GetMesh()->bNoSkeletonUpdate = true;
+
+	GetWorldTimerManager().SetTimer(DeathTimer, this, &AEnemy::Disappear, DeathDelay);
+}
+
+bool AEnemy::Alive()
+{
+	return GetEnemyMovementState() != EEnemyMovementState::EMS_Death;
+}
+
+void AEnemy::Disappear()
+{
+	Destroy();
 }

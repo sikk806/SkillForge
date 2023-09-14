@@ -1,7 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Main.h"
+#include "Enemy.h"
 #include "MainAnimInstance.h"
+#include "MainPlayerController.h"
 
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -11,6 +13,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "Engine/EngineTypes.h"
+
 
 // Sets default values
 AMain::AMain()
@@ -34,7 +37,7 @@ AMain::AMain()
 	RV = 0;
 
 	MaxHealth = 100;
-	Health = 100;
+	Health = 90;
 
 	MaxIdentity = 100;
 	MinIdentity = 0;
@@ -55,12 +58,18 @@ AMain::AMain()
 	bLMBDown = false;
 	bRMBDown = false;
 	bAttacking = false;
+	bHasCombatTarget = false;
+
+	InterpSpeed = 15.f;
+	bInterpToEnemy = false;
 }
 
 // Called when the game starts or when spawned
 void AMain::BeginPlay()
 {
 	Super::BeginPlay();
+
+	MainPlayerController = Cast<AMainPlayerController>(GetController());
 
 	// Camera Start Rotation
 	FRotator SetCameraRotation = GetControlRotation();
@@ -210,6 +219,15 @@ void AMain::Tick(float DeltaTime)
 			break;
 		}
 	}
+
+	if(CombatTargets)
+	{
+		CombatTargetLocation = CombatTargets->GetActorLocation();
+		if(MainPlayerController)
+		{
+			MainPlayerController->EnemyLocation = CombatTargetLocation;
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -289,7 +307,7 @@ void AMain::MoveRight(float Value)
 
 void AMain::LookUpRate(float rate)
 {
-	if (!bSpaceKeyDown)
+	if (!bSpaceKeyDown && !bAttacking)
 	{
 		float CameraPitch = GetControlRotation().Pitch;
 		float NewCameraPitch = CameraPitch + rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds();
@@ -311,7 +329,7 @@ void AMain::LookUpRate(float rate)
 
 void AMain::TurnRate(float rate)
 {
-	if (!bSpaceKeyDown)
+	if (!bSpaceKeyDown && !bAttacking)
 	{
 		AddControllerYawInput(rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 	}
@@ -429,9 +447,10 @@ void AMain::RMBUp()
 
 void AMain::Attack()
 {
-	if (!bAttacking)
+	if (!bAttacking && EquippedSword)
 	{
 		bAttacking = true;
+		SetInterpToEnemy(true);
 
 		UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
 
@@ -464,4 +483,46 @@ void AMain::AttackEnd()
 		}
 		Attack();
 	}
+}
+
+void AMain::SetInterpToEnemy(bool Interp)
+{
+	bInterpToEnemy = Interp;
+}
+
+void AMain::DecrementHealth(float Amount)
+{
+	if (Health - Amount <= 0)
+	{
+		Health -= Amount;
+		Die();
+	}
+	else
+	{
+		Health -= Amount;
+	}
+}
+
+void AMain::IncrementHealth(float Amount)
+{
+
+}
+
+float AMain::TakeDamage(float DamageAmount, struct FDamageEvent const & DamageEvent, class AController * EventInstigator, AActor * DamageCauser)
+{
+	DecrementHealth(DamageAmount);
+
+	return DamageAmount;
+}
+
+void AMain::Die()
+{
+	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance && CombatMontage)
+	{
+		AnimInstance->Montage_Play(CombatMontage, 1.f);
+		AnimInstance->Montage_JumpToSection(FName("Death"), CombatMontage);
+	}
+	
 }

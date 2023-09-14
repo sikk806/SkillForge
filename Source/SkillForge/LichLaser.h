@@ -4,16 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "LichSkill.generated.h"
+#include "LichLaser.generated.h"
 
 UCLASS()
-class SKILLFORGE_API ALichSkill : public AActor
+class SKILLFORGE_API ALichLaser : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ALichSkill();
+	ALichLaser();
 
 protected:
 	// Called when the game starts or when spawned
@@ -23,13 +23,21 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skills")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skills")
 	class UCapsuleComponent* Laser;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skills | Particle")
 	UParticleSystemComponent* LaserParticle;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skills | Warning")
+	class UStaticMeshComponent* LaserWarning;
+
+	bool bAttack;
+
+
+
 	UFUNCTION()
 	virtual void LaserOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+
 
 };

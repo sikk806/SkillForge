@@ -13,6 +13,7 @@ enum class EEnemyMovementState : uint8
 	EMS_MoveToTarget UMETA(DispalyName = "MoveToTarget"),
 	EMS_Attack UMETA(DisplayName = "Attack"),
 	EMS_MoveToHome UMETA(DisplayName = "MoveToHome"),
+	EMS_Death UMETA(DisplayName = "Death"),
 
 	EMS_DefaultMax UMETA(DisplayName = "DefaultMax")
 };
@@ -45,6 +46,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	class UParticleSystem* HitParticles;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	class UAnimMontage* CombatMontage;
+
+	// Status - Damage
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+	TSubclassOf<UDamageType> DamageTypeClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
+	class UBoxComponent* CombatCollision;
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -56,6 +68,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	// Enemy Status
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float WalkMaxSpeed;
 
@@ -70,6 +83,24 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float Damage;
+
+	// Enemy Combat
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="AI")
+	AMain* CombatTarget;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="AI")
+	bool bOverlappingCombatSphere;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="AI")
+	bool bAttacking;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	float AttackMinTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	float AttackMaxTime;
+
+	FTimerHandle AttackTimer;
 
 	UFUNCTION()
 	virtual void AgroSphereOnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
@@ -86,9 +117,19 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void MoveToTarget(class AMain* Target);
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="AI")
-	AMain* CombatTarget;
+	void DecrementHealth(float Amount);
+	void IncrementHealth(float Amount);
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const & DamageEvent, class AController * EventInstigator, AActor * DamageCauser) override;
+	void Die();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="AI")
-	bool bOverlappingCombatSphere;
+	UFUNCTION(BlueprintCallable)
+	void DeathEnd();
+	bool Alive();
+
+	FTimerHandle DeathTimer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI")
+	float DeathDelay;
+
+	void Disappear();
 };
