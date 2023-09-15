@@ -6,6 +6,7 @@
 #include "Main.h"
 #include "Components/CapsuleComponent.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "TimerManager.h"
 
 // Sets default values
 ALichLaser::ALichLaser()
@@ -14,6 +15,7 @@ ALichLaser::ALichLaser()
 	PrimaryActorTick.bCanEverTick = true;
 
 	bAttack = false;
+	bLaserOn = true;
 
 	Laser = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Laser"));
 	Laser->SetupAttachment(GetRootComponent());
@@ -43,11 +45,18 @@ void ALichLaser::Tick(float DeltaTime)
 
 	if(bAttack)
 	{
-		FVector NewScale = FVector(LaserWarning->GetComponentScale().X + 0.2f, LaserWarning->GetComponentScale().Y, LaserWarning->GetComponentScale().Z);
+		if(bLaserOn)
+		{
+			LaserOff();
+		}
+		//UE_LOG(LogTemp,Warning, TEXT("HI"));
+		FVector NewScale = LaserWarning->GetComponentScale();
+		NewScale.X += 0.2f;
 		if(NewScale.X > 16.f) 
 		{
 			NewScale.X = 16.f;
 		}
+		LaserWarning->SetWorldScale3D(NewScale);
 	}
 
 }
@@ -62,4 +71,16 @@ void ALichLaser::LaserOverlapBegin(UPrimitiveComponent* OverlappedComponent, AAc
 			UE_LOG(LogTemp, Warning, TEXT("HIT"));
 		}
 	}
+}
+
+void ALichLaser::LaserOff()
+{
+	bLaserOn = false;
+	GetWorldTimerManager().SetTimer(LaserTimer, this, &ALichLaser::DestroyLaser, 2.f);
+}
+
+void ALichLaser::DestroyLaser()
+{
+	bAttack = false;
+	Destroy();
 }

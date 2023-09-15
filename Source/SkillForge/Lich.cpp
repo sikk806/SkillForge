@@ -32,6 +32,8 @@ void ALich::BeginPlay()
 
     GetCharacterMovement()->MaxWalkSpeed = 400.f;
 
+	EnemyMovementState = EEnemyMovementState::EMS_Idle;
+
 	AgroSphere->OnComponentBeginOverlap.AddDynamic(this, &ALich::AgroSphereOnOverlapBegin);
 	AgroSphere->OnComponentEndOverlap.AddDynamic(this, &ALich::AgroSphereOnOverlapEnd);
 
@@ -88,9 +90,21 @@ void ALich::CombatSphereOnOverlapBegin(UPrimitiveComponent* OverlappedComponent,
 			UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
 			if(AnimInstance && CombatMontage)
 			{
-				AnimInstance->Montage_Play(CombatMontage, 1.3f);
+				AnimInstance->Montage_Play(CombatMontage, 1.0f);
 				AnimInstance->Montage_JumpToSection(FName("Spell"), CombatMontage);
-				LichLaser->bAttack = true;
+				if(Laser)
+				{
+					FVector StartLocation = GetActorLocation();
+					FRotator ActorRotation = GetActorRotation();
+
+					FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
+					ALichLaser* LichLaser = GetWorld()->SpawnActor<ALichLaser>(Laser, StartLocation + ForwardVector*700.f, GetActorRotation());
+					if(LichLaser)
+					{
+						LichLaser->bAttack = true;
+					}
+
+				}
 			}
 		}
 	}
@@ -99,4 +113,10 @@ void ALich::CombatSphereOnOverlapBegin(UPrimitiveComponent* OverlappedComponent,
 void ALich::CombatSphereOnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 
+}
+
+void ALich::SpellEnd()
+{
+	SetEnemyMovementState(EEnemyMovementState::EMS_Idle);
+	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 }

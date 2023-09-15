@@ -23,21 +23,27 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skills")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills")
 	class UCapsuleComponent* Laser;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skills | Particle")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skills | Particle")
 	UParticleSystemComponent* LaserParticle;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skills | Warning")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skills | Warning")
 	class UStaticMeshComponent* LaserWarning;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skills | Warning")
 	bool bAttack;
-
-
+	
+	bool bLaserOn;
 
 	UFUNCTION()
 	virtual void LaserOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
+	UFUNCTION()
+	void DestroyLaser();
+	void LaserOff();
+
+	FTimerHandle LaserTimer;
 
 };
