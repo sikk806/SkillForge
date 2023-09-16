@@ -49,7 +49,6 @@ void ALichLaser::Tick(float DeltaTime)
 		{
 			LaserOff();
 		}
-		//UE_LOG(LogTemp,Warning, TEXT("HI"));
 		FVector NewScale = LaserWarning->GetComponentScale();
 		NewScale.X += 0.2f;
 		if(NewScale.X > 16.f) 

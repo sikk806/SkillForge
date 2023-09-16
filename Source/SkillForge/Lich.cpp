@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Main.h"
 #include "Lich.h"
 #include "LichLaser.h"
+#include "LichSkull.h"
 
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
@@ -17,20 +17,19 @@
 ALich::ALich()
 {
 	PointLightComponent = CreateDefaultSubobject<UPointLightComponent>(TEXT("PointLight"));
-    PointLightComponent->SetupAttachment(GetRootComponent());
+	PointLightComponent->SetupAttachment(GetRootComponent());
 
 	bAttack = false;
 
 	MaxHealth = 10000000;
-	Health = 1234567; 
-
+	Health = 1234567;
 }
 
 void ALich::BeginPlay()
 {
-    Super::BeginPlay();
+	Super::BeginPlay();
 
-    GetCharacterMovement()->MaxWalkSpeed = 400.f;
+	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 
 	EnemyMovementState = EEnemyMovementState::EMS_Idle;
 
@@ -46,7 +45,7 @@ void ALich::Tick(float DeltaTime)
 	// if(bAttack)
 	// {
 	// 	FVector NewScale = FVector(LaserWarning->GetComponentScale().X + 0.2f, LaserWarning->GetComponentScale().Y, LaserWarning->GetComponentScale().Z);
-	// 	if(NewScale.X > 16.f) 
+	// 	if(NewScale.X > 16.f)
 	// 	{
 	// 		LaserParticle->ActivateSystem(true); // Particle Replay
 	// 		LaserParticle->SetVisibility(true);
@@ -57,62 +56,80 @@ void ALich::Tick(float DeltaTime)
 	// }
 }
 
-void ALich::AgroSphereOnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+void ALich::AgroSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
 	Super::AgroSphereOnOverlapBegin(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
-	if(OtherActor)
+	if (OtherActor)
 	{
-		AMain* Main = Cast<AMain>(OtherActor);
-		if(Main)
+		AMain *Main = Cast<AMain>(OtherActor);
+		if (Main)
 		{
-			
 		}
 	}
 }
 
-void ALich::AgroSphereOnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void ALich::AgroSphereOnOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex)
 {
-
 }
 
-void ALich::CombatSphereOnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+void ALich::CombatSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
 	Super::CombatSphereOnOverlapBegin(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
-	if(OtherActor)
+	if (OtherActor)
 	{
-		AMain* Main = Cast<AMain>(OtherActor);
-		if(Main)
+		AMain *Main = Cast<AMain>(OtherActor);
+		if (Main)
 		{
 			GetCharacterMovement()->MaxWalkSpeed = 0.f;
 			bAttack = true;
 			SetEnemyMovementState(EEnemyMovementState::EMS_Attack);
 
 			UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
-			if(AnimInstance && CombatMontage)
+			if (AnimInstance && CombatMontage)
 			{
 				AnimInstance->Montage_Play(CombatMontage, 1.0f);
 				AnimInstance->Montage_JumpToSection(FName("Spell"), CombatMontage);
-				if(Laser)
+				// if(Laser)
+				// {
+				// 	FVector StartLocation = GetActorLocation();
+				// 	FRotator ActorRotation = GetActorRotation();
+
+				// 	FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
+				// 	ALichLaser* LichLaser = GetWorld()->SpawnActor<ALichLaser>(Laser, StartLocation + ForwardVector*700.f, GetActorRotation());
+				// 	if(LichLaser)
+				// 	{
+				// 		LichLaser->bAttack = true;
+				// 	}
+				// }
+				if (Skull)
 				{
-					FVector StartLocation = GetActorLocation();
-					FRotator ActorRotation = GetActorRotation();
-
-					FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
-					ALichLaser* LichLaser = GetWorld()->SpawnActor<ALichLaser>(Laser, StartLocation + ForwardVector*700.f, GetActorRotation());
-					if(LichLaser)
+					for (int i = 0; i < 10; i++)
 					{
-						LichLaser->bAttack = true;
-					}
+						FVector MinRange = FVector(-15.0f, -15.0f, 0.0f);
+						FVector MaxRange = FVector(15.0f, 15.0f, 0.0f);
 
+						FVector RandomLocation = FMath::RandPointInBox(FBox(MinRange, MaxRange));
+						
+						FVector StartLocation = GetActorLocation();
+						FRotator ActorRotation = GetActorRotation();
+
+						FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
+						StartLocation.Z += 75.f;
+						StartLocation += (RandomLocation*100.f);
+						ALichSkull *LichSkull = GetWorld()->SpawnActor<ALichSkull>(Skull, StartLocation + ForwardVector * 100.f, GetActorRotation());
+						if (LichSkull)
+						{
+							LichSkull->bAttack = true;
+						}
+					}
 				}
 			}
 		}
 	}
 }
-	
-void ALich::CombatSphereOnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
 
+void ALich::CombatSphereOnOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex)
+{
 }
 
 void ALich::SpellEnd()

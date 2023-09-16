@@ -20,6 +20,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
 	TSubclassOf<class ALichLaser> Laser;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
+	TSubclassOf<class ALichSkull> Skull;
+
 protected:
 	virtual void BeginPlay() override;
 
