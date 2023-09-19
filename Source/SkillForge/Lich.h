@@ -23,6 +23,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
 	TSubclassOf<class ALichSkull> Skull;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
+	TSubclassOf<class ALichWind> Wind;
+
 protected:
 	virtual void BeginPlay() override;
 

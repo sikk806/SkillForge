@@ -4,6 +4,7 @@
 #include "Lich.h"
 #include "LichLaser.h"
 #include "LichSkull.h"
+#include "LichWind.h"
 
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
@@ -101,25 +102,43 @@ void ALich::CombatSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent,
 				// 		LichLaser->bAttack = true;
 				// 	}
 				// }
-				if (Skull)
-				{
-					for (int i = 0; i < 10; i++)
-					{
-						FVector MinRange = FVector(-15.0f, -15.0f, 0.0f);
-						FVector MaxRange = FVector(15.0f, 15.0f, 0.0f);
+				// if (Skull)
+				// {
+				// 	for (int i = 0; i < 10; i++)
+				// 	{
+				// 		FVector MinRange = FVector(-15.0f, -15.0f, 0.0f);
+				// 		FVector MaxRange = FVector(15.0f, 15.0f, 0.0f);
 
-						FVector RandomLocation = FMath::RandPointInBox(FBox(MinRange, MaxRange));
+				// 		FVector RandomLocation = FMath::RandPointInBox(FBox(MinRange, MaxRange));
 						
+				// 		FVector StartLocation = GetActorLocation();
+				// 		FRotator ActorRotation = GetActorRotation();
+
+				// 		FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
+				// 		StartLocation.Z += 75.f;
+				// 		StartLocation += (RandomLocation*100.f);
+				// 		ALichSkull *LichSkull = GetWorld()->SpawnActor<ALichSkull>(Skull, StartLocation + ForwardVector * 100.f, GetActorRotation());
+				// 		if (LichSkull)
+				// 		{
+				// 			LichSkull->bAttack = true;
+				// 		}
+				// 	}
+				// }
+				if (Wind)
+				{
+					for (int i = 0; i < 4; i++)
+					{
 						FVector StartLocation = GetActorLocation();
 						FRotator ActorRotation = GetActorRotation();
 
+						ActorRotation.Yaw += 90*i;
+
 						FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
-						StartLocation.Z += 75.f;
-						StartLocation += (RandomLocation*100.f);
-						ALichSkull *LichSkull = GetWorld()->SpawnActor<ALichSkull>(Skull, StartLocation + ForwardVector * 100.f, GetActorRotation());
-						if (LichSkull)
+						ALichWind *LichWind = GetWorld()->SpawnActor<ALichWind>(Wind, StartLocation + ForwardVector * 150.f, ActorRotation);
+						if (LichWind)
 						{
-							LichSkull->bAttack = true;
+							LichWind->WindNo = i;
+							LichWind->bAttack = true;
 						}
 					}
 				}
