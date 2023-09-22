@@ -5,6 +5,7 @@
 #include "LichLaser.h"
 #include "LichSkull.h"
 #include "LichWind.h"
+#include "LichWave.h"
 
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
@@ -24,6 +25,8 @@ ALich::ALich()
 
 	MaxHealth = 10000000;
 	Health = 1234567;
+
+	WaveCnt = 0;
 }
 
 void ALich::BeginPlay()
@@ -110,7 +113,7 @@ void ALich::CombatSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent,
 				// 		FVector MaxRange = FVector(15.0f, 15.0f, 0.0f);
 
 				// 		FVector RandomLocation = FMath::RandPointInBox(FBox(MinRange, MaxRange));
-						
+
 				// 		FVector StartLocation = GetActorLocation();
 				// 		FRotator ActorRotation = GetActorRotation();
 
@@ -124,23 +127,28 @@ void ALich::CombatSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent,
 				// 		}
 				// 	}
 				// }
-				if (Wind)
+				// if (Wind)
+				// {
+				// 	for (int i = 0; i < 4; i++)
+				// 	{
+				// 		FVector StartLocation = GetActorLocation();
+				// 		FRotator ActorRotation = GetActorRotation();
+
+				// 		ActorRotation.Yaw += 90*i;
+
+				// 		FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
+				// 		ALichWind *LichWind = GetWorld()->SpawnActor<ALichWind>(Wind, StartLocation + ForwardVector * 150.f, ActorRotation);
+				// 		if (LichWind)
+				// 		{
+				// 			LichWind->WindNo = i;
+				// 			LichWind->bAttack = true;
+				// 		}
+				// 	}
+				// }
+				if (Wave)
 				{
-					for (int i = 0; i < 4; i++)
-					{
-						FVector StartLocation = GetActorLocation();
-						FRotator ActorRotation = GetActorRotation();
-
-						ActorRotation.Yaw += 90*i;
-
-						FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
-						ALichWind *LichWind = GetWorld()->SpawnActor<ALichWind>(Wind, StartLocation + ForwardVector * 150.f, ActorRotation);
-						if (LichWind)
-						{
-							LichWind->WindNo = i;
-							LichWind->bAttack = true;
-						}
-					}
+					WaveCnt = 0;
+					FourWave();
 				}
 			}
 		}
@@ -155,4 +163,24 @@ void ALich::SpellEnd()
 {
 	SetEnemyMovementState(EEnemyMovementState::EMS_Idle);
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
+}
+
+void ALich::FourWave()
+{
+	if (WaveCnt < 5)
+	{
+		FVector StartLocation = GetActorLocation();
+		FRotator ActorRotation = GetActorRotation();
+		StartLocation.Z += 50.f;
+		
+		ActorRotation.Yaw += 90.f;
+		StartLocation += (ActorRotation.Vector() * WaveCnt*200.f);
+		ALichWave *LichWave = GetWorld()->SpawnActor<ALichWave>(Wave, StartLocation, GetActorRotation());
+		if (LichWave)
+		{
+			LichWave->bAttack = true;
+		}
+		GetWorldTimerManager().SetTimer(WaveTime, this, &ALich::FourWave, 0.25f);
+		WaveCnt++;
+	}
 }

@@ -75,7 +75,7 @@ void ALichSkull::Tick(float DeltaTime)
 void ALichSkull::SkullOff()
 {
 	bSkullOn = false;
-	GetWorldTimerManager().SetTimer(SkullTimer, this, &ALichSkull::DestroySkull, 2.f);
+	GetWorldTimerManager().SetTimer(SkullTimer, this, &ALichSkull::DestroySkull, 2.3f);
 }
 
 void ALichSkull::DestroySkull()

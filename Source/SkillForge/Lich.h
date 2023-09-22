@@ -26,6 +26,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
 	TSubclassOf<class ALichWind> Wind;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
+	TSubclassOf<class ALichWave> Wave;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -48,4 +51,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SpellEnd();
+
+	FTimerHandle WaveTime;
+	void FourWave();
+	int WaveCnt;
 };
