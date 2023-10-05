@@ -4,6 +4,9 @@
 #include "Enemy.h"
 #include "MainAnimInstance.h"
 #include "MainPlayerController.h"
+#include "MainSting.h"
+#include "MainSwordFalling.h"
+#include "MainBuff.h"
 
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -12,14 +15,17 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "Engine/EngineTypes.h"
-
 
 // Sets default values
 AMain::AMain()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	SwordBuff = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("StingParticle"));
+	SwordBuff->SetupAttachment(GetRootComponent());
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	SpringArm->SetupAttachment(GetRootComponent());
@@ -62,6 +68,8 @@ AMain::AMain()
 
 	InterpSpeed = 15.f;
 	bInterpToEnemy = false;
+
+	SwordBuff = nullptr;
 }
 
 // Called when the game starts or when spawned
@@ -220,10 +228,10 @@ void AMain::Tick(float DeltaTime)
 		}
 	}
 
-	if(CombatTargets)
+	if (CombatTargets)
 	{
 		CombatTargetLocation = CombatTargets->GetActorLocation();
-		if(MainPlayerController)
+		if (MainPlayerController)
 		{
 			MainPlayerController->EnemyLocation = CombatTargetLocation;
 		}
@@ -247,6 +255,11 @@ void AMain::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
 	PlayerInputComponent->BindAction("LMB", IE_Released, this, &AMain::LMBUp);
 	PlayerInputComponent->BindAction("RMB", IE_Pressed, this, &AMain::RMBDown);
 	PlayerInputComponent->BindAction("RMB", IE_Released, this, &AMain::RMBUp);
+
+	// Skill
+	PlayerInputComponent->BindAction("Skill1", IE_Pressed, this, &AMain::QSkill);
+	PlayerInputComponent->BindAction("Skill2", IE_Pressed, this, &AMain::ESkill);
+	PlayerInputComponent->BindAction("Skill3", IE_Pressed, this, &AMain::RSkill);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AMain::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMain::MoveRight);
@@ -473,13 +486,16 @@ void AMain::Attack()
 void AMain::AttackEnd()
 {
 	bAttacking = false;
-	if(bLMBDown || bRMBDown)
+	if (bLMBDown || bRMBDown)
 	{
-		if(bRMBDown)
+		if (bRMBDown)
 		{
-			if(ContinAttack == FName("AttackA2")) ContinAttack = FName("AttackA3");
-			else if(ContinAttack == FName("AttackA3")) ContinAttack = FName("AttackA4");
-			else if(ContinAttack == FName("AttackA4")) ContinAttack = FName("AttackA2");
+			if (ContinAttack == FName("AttackA2"))
+				ContinAttack = FName("AttackA3");
+			else if (ContinAttack == FName("AttackA3"))
+				ContinAttack = FName("AttackA4");
+			else if (ContinAttack == FName("AttackA4"))
+				ContinAttack = FName("AttackA2");
 		}
 		Attack();
 	}
@@ -505,10 +521,9 @@ void AMain::DecrementHealth(float Amount)
 
 void AMain::IncrementHealth(float Amount)
 {
-
 }
 
-float AMain::TakeDamage(float DamageAmount, struct FDamageEvent const & DamageEvent, class AController * EventInstigator, AActor * DamageCauser)
+float AMain::TakeDamage(float DamageAmount, struct FDamageEvent const &DamageEvent, class AController *EventInstigator, AActor *DamageCauser)
 {
 	DecrementHealth(DamageAmount);
 
@@ -524,5 +539,77 @@ void AMain::Die()
 		AnimInstance->Montage_Play(CombatMontage, 1.f);
 		AnimInstance->Montage_JumpToSection(FName("Death"), CombatMontage);
 	}
-	
+}
+
+// SKills
+void AMain::QSkill()
+{
+	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance && SkillMontage)
+	{
+		AnimInstance->Montage_Play(SkillMontage, 1.f);
+		AnimInstance->Montage_JumpToSection(FName("Sting"), SkillMontage);
+	}
+}
+
+void AMain::ESkill()
+{
+	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance && SkillMontage)
+	{
+		AnimInstance->Montage_Play(SkillMontage, 1.f);
+		AnimInstance->Montage_JumpToSection(FName("SwordFall"), SkillMontage);
+	}
+}
+
+void AMain::RSkill()
+{
+	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance && SkillMontage)
+	{
+		AnimInstance->Montage_Play(SkillMontage, 1.f);
+		AnimInstance->Montage_JumpToSection(FName("Buff"), SkillMontage);
+	}
+}
+
+void AMain::StingSkill()
+{
+	FVector StartLocation = GetActorLocation();
+	FRotator ActorRotation = GetActorRotation();
+
+	FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
+	AMainSting *MainSting = GetWorld()->SpawnActor<AMainSting>(Sting, StartLocation + ForwardVector * 200.f, GetActorRotation());
+}
+
+void AMain::SwordFallSkillBegin()
+{
+	FVector StartLocation = GetActorLocation();
+	FRotator ActorRotation = GetActorRotation();
+
+	FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
+	AMainSwordFalling *MainSwordFalling = GetWorld()->SpawnActor<AMainSwordFalling>(SwordFallBegin, StartLocation, GetActorRotation());
+	MainSwordFalling->SwordFallParticle->Deactivate();
+}
+
+void AMain::SwordFallSkill()
+{
+	FVector StartLocation = GetActorLocation();
+	FRotator ActorRotation = GetActorRotation();
+
+	FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
+	AMainSwordFalling *MainSwordFalling = GetWorld()->SpawnActor<AMainSwordFalling>(SwordFall, StartLocation + ForwardVector*500.f, GetActorRotation());
+	MainSwordFalling->SwordFallBeginParticle->Deactivate();
+}
+
+void AMain::Buff()
+{
+	FVector StartLocation = GetActorLocation();
+	FRotator ActorRotation = GetActorRotation();
+
+	FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
+	AMainBuff *MainBuff = GetWorld()->SpawnActor<AMainBuff>(ActiveBuff, StartLocation, GetActorRotation());
+	SwordBuff->SetTemplate(MainBuff->ShieldParticle->Template);
 }

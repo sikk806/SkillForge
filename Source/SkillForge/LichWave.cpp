@@ -18,7 +18,7 @@ ALichWave::ALichWave()
 	bMove = false;
 
 	Wave = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Wave"));
-	Wave->SetupAttachment(GetRootComponent());
+	Wave->SetupAttachment(RootComponent);
 
 	WaveParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("WaveParticle"));
 	WaveParticle->SetupAttachment(Wave);

@@ -26,6 +26,7 @@ AEnemy::AEnemy()
 	bOverlappingCombatSphere = false;
 
 	DeathDelay = 2.f;
+	CombatTarget = nullptr;
 
 }
 

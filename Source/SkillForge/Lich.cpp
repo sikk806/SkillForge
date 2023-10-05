@@ -46,18 +46,8 @@ void ALich::BeginPlay()
 
 void ALich::Tick(float DeltaTime)
 {
-	// if(bAttack)
-	// {
-	// 	FVector NewScale = FVector(LaserWarning->GetComponentScale().X + 0.2f, LaserWarning->GetComponentScale().Y, LaserWarning->GetComponentScale().Z);
-	// 	if(NewScale.X > 16.f)
-	// 	{
-	// 		LaserParticle->ActivateSystem(true); // Particle Replay
-	// 		LaserParticle->SetVisibility(true);
-	// 		NewScale.X = 16.f;
-	// 	}
-	// 	else
-	// 		LaserWarning->SetWorldScale3D(NewScale);
-	// }
+	Super::Tick(DeltaTime);
+
 }
 
 void ALich::AgroSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)

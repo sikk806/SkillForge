@@ -200,6 +200,41 @@ public:
 
 	void SetMovementStatus(EMovementStatus Status);
 
+	// Skills
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement | Attack")
+	class UAnimMontage* SkillMontage;
+
+	void QSkill();
+	void ESkill();
+	void RSkill();
+
+	UFUNCTION(BlueprintCallable)
+	void StingSkill();
+
+	UFUNCTION(BlueprintCallable)
+	void SwordFallSkillBegin();
+
+	UFUNCTION(BlueprintCallable)
+	void SwordFallSkill();
+
+	UFUNCTION(BlueprintCallable)
+	void Buff();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
+	TSubclassOf<class AMainSting> Sting;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
+	TSubclassOf<class AMainSwordFalling> SwordFallBegin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
+	TSubclassOf<class AMainSwordFalling> SwordFall;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
+	TSubclassOf<class AMainBuff> ActiveBuff;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skills")
+	UParticleSystemComponent* SwordBuff;
+
 	// Interp When Attacking Enemy
 	float InterpSpeed;
 	bool bInterpToEnemy;
