@@ -12,6 +12,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/BoxComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
@@ -544,34 +545,46 @@ void AMain::Die()
 // SKills
 void AMain::QSkill()
 {
-	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
-
-	if (AnimInstance && SkillMontage)
+	if (EquippedSword && !bAttacking)
 	{
-		AnimInstance->Montage_Play(SkillMontage, 1.f);
-		AnimInstance->Montage_JumpToSection(FName("Sting"), SkillMontage);
+		bAttacking = true;
+		UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+
+		if (AnimInstance && SkillMontage)
+		{
+			AnimInstance->Montage_Play(SkillMontage, 1.f);
+			AnimInstance->Montage_JumpToSection(FName("Sting"), SkillMontage);
+		}
 	}
 }
 
 void AMain::ESkill()
 {
-	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
-
-	if (AnimInstance && SkillMontage)
+	if (EquippedSword && !bAttacking)
 	{
-		AnimInstance->Montage_Play(SkillMontage, 1.f);
-		AnimInstance->Montage_JumpToSection(FName("SwordFall"), SkillMontage);
+		bAttacking = true;
+		UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+
+		if (AnimInstance && SkillMontage)
+		{
+			AnimInstance->Montage_Play(SkillMontage, 1.f);
+			AnimInstance->Montage_JumpToSection(FName("SwordFall"), SkillMontage);
+		}
 	}
 }
 
 void AMain::RSkill()
 {
-	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
-
-	if (AnimInstance && SkillMontage)
+	if (EquippedSword && !bAttacking)
 	{
-		AnimInstance->Montage_Play(SkillMontage, 1.f);
-		AnimInstance->Montage_JumpToSection(FName("Buff"), SkillMontage);
+		bAttacking = true;
+		UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+
+		if (AnimInstance && SkillMontage)
+		{
+			AnimInstance->Montage_Play(SkillMontage, 1.f);
+			AnimInstance->Montage_JumpToSection(FName("Buff"), SkillMontage);
+		}
 	}
 }
 
@@ -600,7 +613,9 @@ void AMain::SwordFallSkill()
 	FRotator ActorRotation = GetActorRotation();
 
 	FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
-	AMainSwordFalling *MainSwordFalling = GetWorld()->SpawnActor<AMainSwordFalling>(SwordFall, StartLocation + ForwardVector*500.f, GetActorRotation());
+	AMainSwordFalling *MainSwordFalling = GetWorld()->SpawnActor<AMainSwordFalling>(SwordFall, StartLocation + ForwardVector * 500.f, GetActorRotation());
+	MainSwordFalling->SwordFall->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	MainSwordFalling->bAttack = true;
 	MainSwordFalling->SwordFallBeginParticle->Deactivate();
 }
 

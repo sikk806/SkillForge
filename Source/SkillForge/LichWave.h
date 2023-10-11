@@ -15,6 +15,12 @@ public:
 	// Sets default values for this actor's properties
 	ALichWave();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="AI")
+	class AAIController* AIController;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+	TSubclassOf<UDamageType> DamageTypeClass;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -22,6 +28,8 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	class ALich* Lich;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills")
 	class UCapsuleComponent* Wave;
@@ -43,6 +51,9 @@ public:
 	void DestroyWave();
 	void WaveOff(float DeltaTime);
 	void MoveAttack();
+
+	UFUNCTION()
+	void CombatOnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
 	FTimerHandle WaveTimer;
 	FTimerHandle HitWaveTimer;

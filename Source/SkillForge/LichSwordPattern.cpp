@@ -52,7 +52,8 @@ void ALichSwordPattern::BeginPlay()
 {
 	Super::BeginPlay();
 
-	BlackSword->OnComponentBeginOverlap.AddDynamic(this, &ALichSwordPattern::OnOverlapBegin);
+	BlackSword->OnComponentBeginOverlap.AddDynamic(this, &ALichSwordPattern::OnBlackSwordOverlapBegin);
+	WhiteSword->OnComponentBeginOverlap.AddDynamic(this, &ALichSwordPattern::OnWhiteSwordOverlapBegin);
 
 	BlackSafeZone->Deactivate();
 	WhiteSafeZone->Deactivate();
@@ -65,7 +66,7 @@ void ALichSwordPattern::Tick(float DeltaTime)
 
 }
 
-void ALichSwordPattern::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+void ALichSwordPattern::OnBlackSwordOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
 	if(OtherActor)
 	{
@@ -85,3 +86,22 @@ void ALichSwordPattern::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent,
 	}
 }
 
+void ALichSwordPattern::OnWhiteSwordOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+{
+	if(OtherActor)
+	{
+		AWeapon* Weapon = Cast<AWeapon>(OtherActor);
+		if(Weapon)
+		{
+			if(WhiteSwordHitCnt > 0)
+			{
+				WhiteSwordHitCnt--;
+			}
+			if(WhiteSwordHitCnt == 0)
+			{
+				WhiteSword->DestroyComponent();
+				WhiteSafeZone->Activate();
+			}
+		}
+	}
+}

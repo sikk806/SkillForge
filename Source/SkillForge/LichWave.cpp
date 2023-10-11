@@ -3,9 +3,14 @@
 
 #include "LichWave.h"
 #include "Lich.h"
+#include "Main.h"
+#include "MainPlayerController.h"
+
+#include "AIController.h"
 #include "Components/CapsuleComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ALichWave::ALichWave()
@@ -35,6 +40,8 @@ void ALichWave::BeginPlay()
 
 	Wave->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WaveWarning->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Wave->OnComponentBeginOverlap.AddDynamic(this, &ALichWave::CombatOnOverlapBegin);
 	
 }
 
@@ -84,6 +91,7 @@ void ALichWave::MoveAttack()
 {
 	bMove = true;
 	WaveWarning->SetActive(false);
+	Wave->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	GetWorldTimerManager().SetTimer(WaveTimer, this, &ALichWave::DestroyWave, 1.f);
 }
 
@@ -93,3 +101,14 @@ void ALichWave::WaveOff(float DeltaTime)
 	GetWorldTimerManager().SetTimer(HitWaveTimer, this, &ALichWave::MoveAttack, 1.f);
 }
 
+void ALichWave::CombatOnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+{
+	if(OtherActor)
+	{
+		AMain* Main = Cast<AMain>(OtherActor);
+		if(Main)
+		{			
+			UGameplayStatics::ApplyDamage(Main, 10.f, AIController, this, DamageTypeClass);
+		}
+	}
+}

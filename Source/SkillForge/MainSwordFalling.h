@@ -15,19 +15,34 @@ public:
 	// Sets default values for this actor's properties
 	AMainSwordFalling();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="AI")
+	class AAIController* AIController;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+	TSubclassOf<UDamageType> DamageTypeClass;
+
+	TSet<AActor*> HitTargetsSet;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+public:
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills")
 	class UBoxComponent* SwordFall;
-
-public:
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skills | Particle")
 	UParticleSystemComponent* SwordFallBeginParticle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skills | Particle")
 	UParticleSystemComponent* SwordFallParticle;
+
+	bool bAttack;
+	bool bCombatOverlap;
+	int cntHit;
+	float SFTimer;
+
 
 public:	
 	// Called every frame
@@ -36,4 +51,7 @@ public:
 	void DestroySelf();
 	FTimerHandle SwordFallTimer;
 
+	UFUNCTION()
+	void CombatOnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+	void CombatOnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };

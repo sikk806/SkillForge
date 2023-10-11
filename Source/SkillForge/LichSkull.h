@@ -15,6 +15,12 @@ public:
 	// Sets default values for this actor's properties
 	ALichSkull();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="AI")
+	class AAIController* AIController;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+	TSubclassOf<UDamageType> DamageTypeClass;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skills")
 	class USphereComponent* Skull;
 
@@ -44,6 +50,10 @@ public:
 	UFUNCTION()
 	void DestroySkull();
 	void SkullOff();
+
+	UFUNCTION()
+	void CombatOnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+
 
 	FTimerHandle SkullTimer;
 

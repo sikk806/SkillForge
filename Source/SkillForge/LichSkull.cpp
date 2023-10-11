@@ -1,11 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "LichSkull.h"
+#include "Main.h"
+#include "MainPlayerController.h"
 
 #include "Components/SphereComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "TimerManager.h"
+#include "AIController.h"
+#include "Kismet/GameplayStatics.h"
 
 
 // Sets default values
@@ -39,7 +43,9 @@ void ALichSkull::BeginPlay()
 
 	SkullMuzzle->Deactivate();
 	SkullHit->Deactivate();
-	
+
+	Skull->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	Skull->OnComponentBeginOverlap.AddDynamic(this, &ALichSkull::CombatOnOverlapBegin);
 }
 
 // Called every frame
@@ -65,6 +71,7 @@ void ALichSkull::Tick(float DeltaTime)
 			{
 				bSkullBoom = true;
 				SkullHit->Activate();
+				Skull->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 			}
 		}
 		SkullWarning->SetWorldScale3D(NewScale);
@@ -75,12 +82,24 @@ void ALichSkull::Tick(float DeltaTime)
 void ALichSkull::SkullOff()
 {
 	bSkullOn = false;
-	GetWorldTimerManager().SetTimer(SkullTimer, this, &ALichSkull::DestroySkull, 2.3f);
+	GetWorldTimerManager().SetTimer(SkullTimer, this, &ALichSkull::DestroySkull, 2.0f);
 }
 
 void ALichSkull::DestroySkull()
 {
 	bAttack = false;
 	Destroy();
+}
+
+void ALichSkull::CombatOnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+{
+	if(OtherActor)
+	{
+		AMain* Main = Cast<AMain>(OtherActor);
+		if(Main)
+		{			
+			UGameplayStatics::ApplyDamage(Main, 10.f, AIController, this, DamageTypeClass);
+		}
+	}
 }
 

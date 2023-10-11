@@ -39,7 +39,13 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Custom")
 	class UPointLightComponent* PointLightComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Attack")
 	bool bAttack;
+
+	bool bDoSkill;
+	FORCEINLINE void SetDoSkill(bool DoSkill) { bDoSkill = DoSkill; };
+
+	bool bIsCombatOverlapping;
 
 	virtual void AgroSphereOnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult) override;
 	
@@ -50,7 +56,7 @@ public:
 	virtual void CombatSphereOnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) override;
 
 	UFUNCTION(BlueprintCallable)
-	void SpellEnd();
+	void AttackEnd();
 
 	FTimerHandle WaveTime;
 	void FourWave();
