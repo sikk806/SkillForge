@@ -111,6 +111,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float MP;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+	float DrainMPRate;
+
 	// Status - Death
 	void DecrementHealth(float Amount);
 	void IncrementHealth(float Amount);
@@ -220,6 +223,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Buff();
 
+	UFUNCTION(BlueprintCallable)
+	void BuffOff();
+
+	FTimerHandle BuffTimer;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
 	TSubclassOf<class AMainSting> Sting;
 
@@ -235,6 +243,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skills")
 	UParticleSystemComponent* SwordBuff;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skills")
+	float BuffDecrementDamage;
+
 	// Interp When Attacking Enemy
 	float InterpSpeed;
 	bool bInterpToEnemy;
@@ -243,4 +254,13 @@ public:
 	// ect.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Particles")
 	class UParticleSystem* HitParticles;
+
+	UAnimInstance *AnimStopMontage;
+	TArray<UAnimMontage*> ActiveMontages;
+
+	UFUNCTION(BlueprintCallable)
+	float GetCombatTargetHealth();
+
+	UFUNCTION(BlueprintCallable)
+	float GetCombatTargetMaxHealth();
 };

@@ -33,7 +33,6 @@ void AMainPlayerController::DisplayEnemyHealthBar()
 {
     if(EnemyHealthBar)
     {
-        UE_LOG(LogTemp, Warning, TEXT("DisplayEnemyHealthBar"));
         bEnemyHealthBarVisible = true;
 		EnemyHealthBar->SetVisibility(ESlateVisibility::Visible);
     }
@@ -43,7 +42,6 @@ void AMainPlayerController::RemoveEnemyHealthBar()
 {
     if(EnemyHealthBar)
     {
-        UE_LOG(LogTemp, Warning, TEXT("RemoveEnemyHealthBar"));
         bEnemyHealthBarVisible = false;
         EnemyHealthBar->SetVisibility(ESlateVisibility::Hidden);
     }
@@ -56,12 +54,13 @@ void AMainPlayerController::Tick(float DeltaTime)
     if(EnemyHealthBar)
     {
         FVector2D PositionInViewport;
-        ProjectWorldLocationToScreen(EnemyLocation, PositionInViewport);
-        PositionInViewport.Y += 85.f;
+		ProjectWorldLocationToScreen(EnemyLocation, PositionInViewport);
+        PositionInViewport.X -= 70.f;
+		PositionInViewport.Y += 85.f;
 
-        FVector2D SizeInViewport(300.f, 25.f);
+		FVector2D SizeInViewport(300.f, 25.f);
 
-        EnemyHealthBar->SetPositionInViewport(PositionInViewport);
-        EnemyHealthBar->SetDesiredSizeInViewport(SizeInViewport);
+		EnemyHealthBar->SetPositionInViewport(PositionInViewport);
+		EnemyHealthBar->SetDesiredSizeInViewport(SizeInViewport);
     }
 }

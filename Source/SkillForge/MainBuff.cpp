@@ -2,10 +2,12 @@
 
 
 #include "MainBuff.h"
+#include "Main.h"
 #include "Engine/World.h"
 #include "Components/SphereComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "TimerManager.h"
+#include "GameFramework/PlayerController.h"
 
 // Sets default values
 AMainBuff::AMainBuff()
@@ -33,6 +35,16 @@ void AMainBuff::BeginPlay()
 
 	ShieldParticle->Deactivate();
 	GetWorldTimerManager().SetTimer(BuffTimer, this, &AMainBuff::DestroySelf, 1.5f);
+
+	APlayerController* MainController = GetWorld()->GetFirstPlayerController();
+	if (MainController)
+	{
+    	AMain* Main = Cast<AMain>(MainController->GetPawn());
+		if(Main)
+		{
+			Main->BuffDecrementDamage = 0.2f;
+		}
+	}
 	
 }
 
@@ -45,6 +57,15 @@ void AMainBuff::Tick(float DeltaTime)
 
 void AMainBuff::DestroySelf()
 {
+	APlayerController* MainController = GetWorld()->GetFirstPlayerController();
+	if (MainController)
+	{
+    	AMain* Main = Cast<AMain>(MainController->GetPawn());
+		if(Main)
+		{
+			Main->bAttacking = false;
+		}
+	}
     Destroy();
 }
 

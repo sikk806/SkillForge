@@ -49,6 +49,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	class UAnimMontage* CombatMontage;
 
+	// When It Dead.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material")
+    class UMaterialInstanceDynamic* CharacterMaterial;
+
 	// Status - Damage
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	TSubclassOf<UDamageType> DamageTypeClass;
@@ -124,12 +128,16 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void DeathEnd();
+
+	UFUNCTION(BlueprintCallable)
 	bool Alive();
 
 	FTimerHandle DeathTimer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI")
 	float DeathDelay;
+
+	float AlphaValue;
 
 	void Disappear();
 };

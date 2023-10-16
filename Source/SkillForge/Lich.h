@@ -29,6 +29,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
 	TSubclassOf<class ALichWave> Wave;
 
+	float DeadLichValue;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -42,6 +44,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Attack")
 	bool bAttack;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Attack")
 	bool bDoSkill;
 	FORCEINLINE void SetDoSkill(bool DoSkill) { bDoSkill = DoSkill; };
 
@@ -56,9 +59,15 @@ public:
 	virtual void CombatSphereOnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) override;
 
 	UFUNCTION(BlueprintCallable)
+	void Attack();
+
+	UFUNCTION(BlueprintCallable)
 	void AttackEnd();
 
 	FTimerHandle WaveTime;
 	void FourWave();
 	int WaveCnt;
+
+
+
 };

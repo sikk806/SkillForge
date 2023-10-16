@@ -10,6 +10,7 @@
 #include "AIController.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Components/BoxComponent.h"
 #include "Components/PointLightComponent.h"
@@ -30,6 +31,8 @@ ALich::ALich()
 	Health = 1000;
 
 	WaveCnt = 0;
+
+	DeadLichValue = 2.f;
 }
 
 void ALich::BeginPlay()
@@ -51,74 +54,106 @@ void ALich::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (bIsCombatOverlapping)
+	if (Alive())
 	{
-		if (CombatTarget)
+		if (bIsCombatOverlapping)
 		{
-			GetCharacterMovement()->MaxWalkSpeed = 0.f;
-			bAttack = true;
-			SetEnemyMovementState(EEnemyMovementState::EMS_Attack);
-
-			UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
-			if (AnimInstance && CombatMontage && !bDoSkill)
+			if (CombatTarget && !bDoSkill)
 			{
-				int32 SkillNum = FMath::RandRange(0, 3);
-				switch (SkillNum)
+				GetCharacterMovement()->MaxWalkSpeed = 0.f;
+				bAttack = true;
+				SetEnemyMovementState(EEnemyMovementState::EMS_Attack);
+
+				UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+				if (AnimInstance && CombatMontage)
 				{
-				case 0:
-					AnimInstance->Montage_Play(CombatMontage, 1.0f);
-					AnimInstance->Montage_JumpToSection(FName("Spell"), CombatMontage);
-					if (Laser)
+					int32 SkillNum = FMath::RandRange(0, 3);
+					switch (SkillNum)
 					{
-						SetDoSkill(true);
-						FVector StartLocation = GetActorLocation();
-						FRotator ActorRotation = GetActorRotation();
-
-						FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
-						ALichLaser *LichLaser = GetWorld()->SpawnActor<ALichLaser>(Laser, StartLocation + ForwardVector * 700.f, GetActorRotation());
-						if (LichLaser)
+					case 0:
+						AnimInstance->Montage_Play(CombatMontage, 1.0f);
+						AnimInstance->Montage_JumpToSection(FName("Spell"), CombatMontage);
+						if (Laser)
 						{
-							LichLaser->bAttack = true;
-						}
-					}
-					break;
-				case 1:
-					AnimInstance->Montage_Play(CombatMontage, 1.0f);
-					AnimInstance->Montage_JumpToSection(FName("AttackRight"), CombatMontage);
-					if (Wave && !bDoSkill)
-					{
-						SetDoSkill(true);
-						WaveCnt = 0;
-						FourWave();
-					}
-					break;
-				case 2:
-					AnimInstance->Montage_Play(CombatMontage, 1.0f);
-					AnimInstance->Montage_JumpToSection(FName("Call"), CombatMontage);
-					if (Skull)
-					{
-						SetDoSkill(true);
-						for (int i = 0; i < 20; i++)
-						{
-							FVector MinRange = FVector(-10.0f, -10.0f, 0.0f);
-							FVector MaxRange = FVector(10.0f, 10.0f, 0.0f);
-
-							FVector RandomLocation = FMath::RandPointInBox(FBox(MinRange, MaxRange));
-
+							SetDoSkill(true);
 							FVector StartLocation = GetActorLocation();
 							FRotator ActorRotation = GetActorRotation();
 
 							FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
-							StartLocation.Z += 75.f;
-							StartLocation += (RandomLocation * 100.f);
-							ALichSkull *LichSkull = GetWorld()->SpawnActor<ALichSkull>(Skull, StartLocation + ForwardVector * 100.f, GetActorRotation());
-							if (LichSkull)
+							ALichLaser *LichLaser = GetWorld()->SpawnActor<ALichLaser>(Laser, StartLocation + ForwardVector * 700.f, GetActorRotation());
+							if (LichLaser)
 							{
-								LichSkull->bAttack = true;
+								LichLaser->bAttack = true;
 							}
 						}
+						break;
+					case 1:
+						AnimInstance->Montage_Play(CombatMontage, 1.0f);
+						AnimInstance->Montage_JumpToSection(FName("AttackRight"), CombatMontage);
+						if (Wave)
+						{
+							SetDoSkill(true);
+							WaveCnt = 0;
+							FourWave();
+						}
+						break;
+					case 2:
+						AnimInstance->Montage_Play(CombatMontage, 1.0f);
+						AnimInstance->Montage_JumpToSection(FName("Call"), CombatMontage);
+						if (Skull)
+						{
+							SetDoSkill(true);
+							for (int i = 0; i < 20; i++)
+							{
+								FVector MinRange = FVector(-10.0f, -10.0f, 0.0f);
+								FVector MaxRange = FVector(10.0f, 10.0f, 0.0f);
+
+								FVector RandomLocation = FMath::RandPointInBox(FBox(MinRange, MaxRange));
+
+								FVector StartLocation = GetActorLocation();
+								FRotator ActorRotation = GetActorRotation();
+
+								FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
+								StartLocation.Z += 75.f;
+								StartLocation += (RandomLocation * 100.f);
+								ALichSkull *LichSkull = GetWorld()->SpawnActor<ALichSkull>(Skull, StartLocation + ForwardVector * 100.f, GetActorRotation());
+								if (LichSkull)
+								{
+									LichSkull->bAttack = true;
+								}
+							}
+						}
+						break;
 					}
-					break;
+				}
+			}
+		}
+	}
+
+	if (!Alive())
+	{
+
+		USkeletalMeshComponent *MeshComponent = FindComponentByClass<USkeletalMeshComponent>();
+		if (MeshComponent)
+		{
+			if (MeshComponent->GetNumMaterials() > 0)
+			{
+				UMaterialInterface *Material = MeshComponent->GetMaterial(0);
+				if (Material)
+				{
+					UMaterialInstanceDynamic *DynamicMaterial = Cast<UMaterialInstanceDynamic>(Material);
+					if (!DynamicMaterial)
+					{
+						DynamicMaterial = UMaterialInstanceDynamic::Create(Material, this);
+					}
+
+					if (DynamicMaterial)
+					{
+						DeadLichValue -= DeltaTime * 0.5f;
+						DynamicMaterial->SetScalarParameterValue(TEXT("Dissolve"), DeadLichValue);
+
+						MeshComponent->SetMaterial(0, DynamicMaterial);
+					}
 				}
 			}
 		}
@@ -127,113 +162,123 @@ void ALich::Tick(float DeltaTime)
 
 void ALich::AgroSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-	Super::AgroSphereOnOverlapBegin(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
-	if (OtherActor)
+	if (Alive())
 	{
-		AMain *Main = Cast<AMain>(OtherActor);
-		if (Main)
+		Super::AgroSphereOnOverlapBegin(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
+		if (OtherActor)
 		{
+			AMain *Main = Cast<AMain>(OtherActor);
+			if (Main)
+			{
+
+			}
 		}
 	}
 }
 
 void ALich::AgroSphereOnOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex)
 {
-	Super::AgroSphereOnOverlapEnd(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
+	if (Alive())
+	{
+		Super::AgroSphereOnOverlapEnd(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
+	}
 }
 
 void ALich::CombatSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-	Super::CombatSphereOnOverlapBegin(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
-	if (OtherActor)
+	if (Alive())
 	{
-		AMain *Main = Cast<AMain>(OtherActor);
-		if (Main)
+		Super::CombatSphereOnOverlapBegin(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
+		if (OtherActor)
 		{
-			bIsCombatOverlapping = true;
-			GetCharacterMovement()->MaxWalkSpeed = 0.f;
-			bAttack = true;
-			SetEnemyMovementState(EEnemyMovementState::EMS_Attack);
-
-			UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
-			if (AnimInstance && CombatMontage && !bDoSkill)
+			AMain *Main = Cast<AMain>(OtherActor);
+			if (Main)
 			{
-				int32 SkillNum = FMath::RandRange(0, 3);
-				switch (SkillNum)
+				bIsCombatOverlapping = true;
+				GetCharacterMovement()->MaxWalkSpeed = 0.f;
+				bAttack = true;
+				SetEnemyMovementState(EEnemyMovementState::EMS_Attack);
+
+				UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+				if (AnimInstance && CombatMontage && !bDoSkill)
 				{
-				case 0:
-					AnimInstance->Montage_Play(CombatMontage, 1.0f);
-					AnimInstance->Montage_JumpToSection(FName("Spell"), CombatMontage);
-					if (Laser)
+					int32 SkillNum = FMath::RandRange(0, 3);
+					switch (SkillNum)
 					{
-						SetDoSkill(true);
-						FVector StartLocation = GetActorLocation();
-						FRotator ActorRotation = GetActorRotation();
-
-						FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
-						ALichLaser *LichLaser = GetWorld()->SpawnActor<ALichLaser>(Laser, StartLocation + ForwardVector * 700.f, GetActorRotation());
-						if (LichLaser)
+					case 0:
+						AnimInstance->Montage_Play(CombatMontage, 1.0f);
+						AnimInstance->Montage_JumpToSection(FName("Spell"), CombatMontage);
+						if (Laser)
 						{
-							LichLaser->bAttack = true;
-						}
-					}
-					break;
-				case 1:
-					AnimInstance->Montage_Play(CombatMontage, 1.0f);
-					AnimInstance->Montage_JumpToSection(FName("AttackRight"), CombatMontage);
-					if (Wave && !bDoSkill)
-					{
-						SetDoSkill(true);
-						WaveCnt = 0;
-						FourWave();
-					}
-					break;
-				case 2:
-					AnimInstance->Montage_Play(CombatMontage, 1.0f);
-					AnimInstance->Montage_JumpToSection(FName("Call"), CombatMontage);
-					if (Skull)
-					{
-						SetDoSkill(true);
-						for (int i = 0; i < 20; i++)
-						{
-							FVector MinRange = FVector(-10.0f, -10.0f, 0.0f);
-							FVector MaxRange = FVector(10.0f, 10.0f, 0.0f);
-
-							FVector RandomLocation = FMath::RandPointInBox(FBox(MinRange, MaxRange));
-
+							SetDoSkill(true);
 							FVector StartLocation = GetActorLocation();
 							FRotator ActorRotation = GetActorRotation();
 
 							FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
-							StartLocation.Z += 75.f;
-							StartLocation += (RandomLocation * 100.f);
-							ALichSkull *LichSkull = GetWorld()->SpawnActor<ALichSkull>(Skull, StartLocation + ForwardVector * 100.f, GetActorRotation());
-							if (LichSkull)
+							ALichLaser *LichLaser = GetWorld()->SpawnActor<ALichLaser>(Laser, StartLocation + ForwardVector * 700.f, GetActorRotation());
+							if (LichLaser)
 							{
-								LichSkull->bAttack = true;
+								LichLaser->bAttack = true;
 							}
 						}
+						break;
+					case 1:
+						AnimInstance->Montage_Play(CombatMontage, 1.0f);
+						AnimInstance->Montage_JumpToSection(FName("AttackRight"), CombatMontage);
+						if (Wave)
+						{
+							SetDoSkill(true);
+							WaveCnt = 0;
+							FourWave();
+						}
+						break;
+					case 2:
+						AnimInstance->Montage_Play(CombatMontage, 1.0f);
+						AnimInstance->Montage_JumpToSection(FName("Call"), CombatMontage);
+						if (Skull)
+						{
+							SetDoSkill(true);
+							for (int i = 0; i < 20; i++)
+							{
+								FVector MinRange = FVector(-10.0f, -10.0f, 0.0f);
+								FVector MaxRange = FVector(10.0f, 10.0f, 0.0f);
+
+								FVector RandomLocation = FMath::RandPointInBox(FBox(MinRange, MaxRange));
+
+								FVector StartLocation = GetActorLocation();
+								FRotator ActorRotation = GetActorRotation();
+
+								FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
+								StartLocation.Z += 75.f;
+								StartLocation += (RandomLocation * 100.f);
+								ALichSkull *LichSkull = GetWorld()->SpawnActor<ALichSkull>(Skull, StartLocation + ForwardVector * 100.f, GetActorRotation());
+								if (LichSkull)
+								{
+									LichSkull->bAttack = true;
+								}
+							}
+						}
+						break;
 					}
-					break;
+					// if (Wind)
+					// {
+					// 	for (int i = 0; i < 4; i++)
+					// 	{
+					// 		FVector StartLocation = GetActorLocation();
+					// 		FRotator ActorRotation = GetActorRotation();
+
+					// 		ActorRotation.Yaw += 90*i;
+
+					// 		FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
+					// 		ALichWind *LichWind = GetWorld()->SpawnActor<ALichWind>(Wind, StartLocation + ForwardVector * 150.f, ActorRotation);
+					// 		if (LichWind)
+					// 		{
+					// 			LichWind->WindNo = i;
+					// 			LichWind->bAttack = true;
+					// 		}
+					// 	}
+					// }
 				}
-				// if (Wind)
-				// {
-				// 	for (int i = 0; i < 4; i++)
-				// 	{
-				// 		FVector StartLocation = GetActorLocation();
-				// 		FRotator ActorRotation = GetActorRotation();
-
-				// 		ActorRotation.Yaw += 90*i;
-
-				// 		FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
-				// 		ALichWind *LichWind = GetWorld()->SpawnActor<ALichWind>(Wind, StartLocation + ForwardVector * 150.f, ActorRotation);
-				// 		if (LichWind)
-				// 		{
-				// 			LichWind->WindNo = i;
-				// 			LichWind->bAttack = true;
-				// 		}
-				// 	}
-				// }
 			}
 		}
 	}
@@ -241,26 +286,48 @@ void ALich::CombatSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent,
 
 void ALich::CombatSphereOnOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex)
 {
-	Super::CombatSphereOnOverlapEnd(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
-	if (OtherActor)
+	if (Alive())
 	{
-		AMain *Main = Cast<AMain>(OtherActor);
-		if (Main)
+		Super::CombatSphereOnOverlapEnd(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
+		if (OtherActor)
 		{
-			bIsCombatOverlapping = false;
-			GetWorldTimerManager().ClearTimer(AttackTimer);
-			// bAttack = false;
-			MoveToTarget(Main);
+			AMain *Main = Cast<AMain>(OtherActor);
+			if (Main)
+			{
+				SetDoSkill(false);
+				bIsCombatOverlapping = false;
+			}
 		}
 	}
+}
+
+void ALich::Attack()
+{
+	SetDoSkill(false);
+	if (bOverlappingCombatSphere)
+    {
+        AMain* Main = Cast<AMain>(CombatTarget);
+        if (Main)
+        {
+            MoveToTarget(Main);
+        }
+    }
+	GetWorldTimerManager().ClearTimer(AttackTimer);
 }
 
 void ALich::AttackEnd()
 {
 	bAttack = false;
-	SetDoSkill(false);
 	SetEnemyMovementState(EEnemyMovementState::EMS_Idle);
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
+	if (bOverlappingCombatSphere)
+	{
+		//SetDoSkill(false);
+		float AttackTime = FMath::FRandRange(1.5f, 2.5f);
+		// SetTimer(FTimerHandle, this, function, Time(float))
+		
+		GetWorldTimerManager().SetTimer(AttackTimer, this, &ALich::Attack, AttackTime);
+	}
 }
 
 void ALich::FourWave()

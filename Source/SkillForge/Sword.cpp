@@ -21,12 +21,12 @@ ASword::ASword()
     CombatCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("CombatCollision"));
     CombatCollision->SetupAttachment(GetRootComponent());
 
-    CombatCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    CombatCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     CombatCollision->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
     CombatCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
     CombatCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 
-    Damage = 25.f;
+    Damage = 10.f;
 
 }
 
@@ -88,12 +88,12 @@ void ASword::CombatOnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor
 
 void ASword::ActivateCollision()
 {
-
+    CombatCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
 void ASword::DeactivateCollision()
 {
-    
+    CombatCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 // For attach Character Socket	

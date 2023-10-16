@@ -7,6 +7,7 @@
 #include "MainSting.h"
 #include "MainSwordFalling.h"
 #include "MainBuff.h"
+#include "Sword.h"
 
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -44,7 +45,7 @@ AMain::AMain()
 	RV = 0;
 
 	MaxHealth = 100;
-	Health = 90;
+	Health = 100;
 
 	MaxIdentity = 100;
 	MinIdentity = 0;
@@ -53,6 +54,7 @@ AMain::AMain()
 
 	MaxMP = 100;
 	MP = 100;
+	DrainMPRate = 5;
 
 	BaseLookUpRate = 55.f;
 	BaseTurnRate = 55.f;
@@ -60,6 +62,9 @@ AMain::AMain()
 	WalkSpeed = 300.f;
 	RunSpeed = 450.f;
 	RollSpeed = 600.f;
+
+	// 0.0f ~ 1.0f
+	BuffDecrementDamage = 1.0f;
 
 	ContinAttack = FName("AttackA2");
 	bLMBDown = false;
@@ -89,6 +94,11 @@ void AMain::BeginPlay()
 	// Movement Init
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	SetMovementStatus(EMovementStatus::EMS_IdleWalk);
+
+	// For Stop Montage (There are many similar declarations in other functions, so they will need to be modified later when optimizing.)
+	AnimStopMontage = GetMesh()->GetAnimInstance();
+	ActiveMontages.Add(CombatMontage);
+	ActiveMontages.Add(SkillMontage);
 }
 
 // Called every frame
@@ -100,14 +110,37 @@ void AMain::Tick(float DeltaTime)
 	Roll Can Avoid Monster's Attack. But using the roll reduces the identity of 30.
 	This Identity can't use under Identity 30.
 	*/
+	float DrainMP = DeltaTime * DrainMPRate;
+	if(MP + DrainMP >= MaxMP)
+	{
+		MP = MaxMP;
+	}
+	else
+	{
+		MP += DrainMP;
+	}
+
 	if (MovementStatus == EMovementStatus::EMS_RollStart)
 	{
 		if (Identity >= 30.f)
 		{
+			if (AnimStopMontage)
+			{
+				for (UAnimMontage* MontageInstance : ActiveMontages)
+				{
+					AnimStopMontage->Montage_Stop(0.2f, MontageInstance);
+				}
+			}
+			bAttacking = false;
 			Identity -= 30.f;
 			SetMovementStatus(EMovementStatus::EMS_Roll);
 			FV = ForwardValue;
 			RV = RightValue;
+			if (FV == 0 && RV == 0)
+			{
+				FV = 1;
+				RV = 0;
+			}
 		}
 		else
 		{
@@ -377,16 +410,12 @@ void AMain::ShiftKeyDown()
 
 void AMain::ShiftKeyUp()
 {
-	if (!bSpaceKeyDown)
-	{
-		bShiftKeyDown = false;
-		// SetMovementStatus(EMovementStatus::EMS_IdleWalk);
-	}
+	bShiftKeyDown = false;
 }
 
 void AMain::SpaceKeyDown()
 {
-	if (!bSpaceKeyDown && !bAttacking)
+	if (!bSpaceKeyDown)
 	{
 		EMovementStatus Status;
 		Status = MovementStatus;
@@ -399,7 +428,6 @@ void AMain::SpaceKeyDown()
 								 { EndRollState(Status); });
 
 		GetWorldTimerManager().SetTimer(RollTimerHandle, TimerDelegate, 1.0f, false);
-		// GetWorldTimerManager().SetTimer(RollTimerHandle, this, &AMain::EndRollState, 1.0f, false);
 	}
 }
 
@@ -430,6 +458,10 @@ void AMain::LMBDown()
 	if (!bLMBDown && !bRMBDown && (MovementStatus != EMovementStatus::EMS_Roll))
 	{
 		bLMBDown = true;
+		
+		ContinAttack = FName("AttackA2");
+		if(EquippedSword)
+			EquippedSword->Damage = 10.f;
 		Attack();
 	}
 }
@@ -456,6 +488,9 @@ void AMain::RMBUp()
 	if (bRMBDown)
 	{
 		bRMBDown = false;
+		ContinAttack = FName("AttackA2");
+		if(EquippedSword)
+			EquippedSword->Damage = 10.f;
 	}
 }
 
@@ -472,6 +507,7 @@ void AMain::Attack()
 		{
 			if (bLMBDown)
 			{
+				EquippedSword->Damage = 10.f;
 				AnimInstance->Montage_Play(CombatMontage, 2.f);
 				AnimInstance->Montage_JumpToSection(FName("AttackA1"), CombatMontage);
 			}
@@ -489,14 +525,23 @@ void AMain::AttackEnd()
 	bAttacking = false;
 	if (bLMBDown || bRMBDown)
 	{
-		if (bRMBDown)
+		if (bRMBDown && EquippedSword)
 		{
 			if (ContinAttack == FName("AttackA2"))
+			{
 				ContinAttack = FName("AttackA3");
+				EquippedSword->Damage = 15.f;
+			}
 			else if (ContinAttack == FName("AttackA3"))
+			{
 				ContinAttack = FName("AttackA4");
+				EquippedSword->Damage = 20.f;
+			}
 			else if (ContinAttack == FName("AttackA4"))
+			{
 				ContinAttack = FName("AttackA2");
+				EquippedSword->Damage = 10.f;
+			}
 		}
 		Attack();
 	}
@@ -526,7 +571,7 @@ void AMain::IncrementHealth(float Amount)
 
 float AMain::TakeDamage(float DamageAmount, struct FDamageEvent const &DamageEvent, class AController *EventInstigator, AActor *DamageCauser)
 {
-	DecrementHealth(DamageAmount);
+	DecrementHealth(DamageAmount * BuffDecrementDamage);
 
 	return DamageAmount;
 }
@@ -547,11 +592,16 @@ void AMain::QSkill()
 {
 	if (EquippedSword && !bAttacking)
 	{
-		bAttacking = true;
 		UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
 
 		if (AnimInstance && SkillMontage)
 		{
+			if (MP < 33)
+			{
+				return;
+			}
+			bAttacking = true;
+			MP -= 33;
 			AnimInstance->Montage_Play(SkillMontage, 1.f);
 			AnimInstance->Montage_JumpToSection(FName("Sting"), SkillMontage);
 		}
@@ -562,11 +612,16 @@ void AMain::ESkill()
 {
 	if (EquippedSword && !bAttacking)
 	{
-		bAttacking = true;
 		UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
 
 		if (AnimInstance && SkillMontage)
 		{
+			if (MP < 99)
+			{
+				return;
+			}
+			bAttacking = true;
+			MP -= 99;
 			AnimInstance->Montage_Play(SkillMontage, 1.f);
 			AnimInstance->Montage_JumpToSection(FName("SwordFall"), SkillMontage);
 		}
@@ -577,11 +632,16 @@ void AMain::RSkill()
 {
 	if (EquippedSword && !bAttacking)
 	{
-		bAttacking = true;
 		UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
 
 		if (AnimInstance && SkillMontage)
 		{
+			if (MP < 66)
+			{
+				return;
+			}
+			bAttacking = true;
+			MP -= 66;
 			AnimInstance->Montage_Play(SkillMontage, 1.f);
 			AnimInstance->Montage_JumpToSection(FName("Buff"), SkillMontage);
 		}
@@ -625,6 +685,39 @@ void AMain::Buff()
 	FRotator ActorRotation = GetActorRotation();
 
 	FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
-	AMainBuff *MainBuff = GetWorld()->SpawnActor<AMainBuff>(ActiveBuff, StartLocation, GetActorRotation());
+	ForwardVector.Z -= 90.f;
+	AMainBuff *MainBuff = GetWorld()->SpawnActor<AMainBuff>(ActiveBuff, StartLocation + ForwardVector, GetActorRotation());
 	SwordBuff->SetTemplate(MainBuff->ShieldParticle->Template);
+
+	GetWorldTimerManager().SetTimer(BuffTimer, this, &AMain::BuffOff, 9.5f);
+}
+
+void AMain::BuffOff()
+{
+	GetWorldTimerManager().ClearTimer(BuffTimer);
+	BuffDecrementDamage = 1.0f;
+}
+
+float AMain::GetCombatTargetHealth()
+{
+    if (CombatTargets)
+    {
+        return CombatTargets->Health;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+float AMain::GetCombatTargetMaxHealth()
+{
+	if (CombatTargets)
+    {
+        return CombatTargets->MaxHealth;
+    }
+    else
+    {
+        return 0;
+    }
 }

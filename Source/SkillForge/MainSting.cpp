@@ -10,6 +10,7 @@
 #include "TimerManager.h"
 #include "AIController.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerController.h"
 
 // Sets default values
 AMainSting::AMainSting()
@@ -55,6 +56,15 @@ void AMainSting::Tick(float DeltaTime)
 
 void AMainSting::DestroySelf()
 {
+	APlayerController* MainController = GetWorld()->GetFirstPlayerController();
+	if (MainController)
+	{
+    	AMain* Main = Cast<AMain>(MainController->GetPawn());
+		if(Main)
+		{
+			Main->bAttacking = false;
+		}
+	}
     Destroy();
 }
 

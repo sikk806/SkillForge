@@ -43,8 +43,8 @@ ALichSwordPattern::ALichSwordPattern()
 	WhiteSafeZone = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("WhiteSafeZone"));
 	WhiteSafeZone->SetupAttachment(WhiteSwordHit);
 
-	WhiteSwordHitCnt = 10;
-	BlackSwordHitCnt = 10;
+	WhiteSwordHitCnt = 5;
+	BlackSwordHitCnt = 5;
 }
 
 // Called when the game starts or when spawned

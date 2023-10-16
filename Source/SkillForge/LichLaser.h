@@ -15,6 +15,12 @@ public:
 	// Sets default values for this actor's properties
 	ALichLaser();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="AI")
+	class AAIController* AIController;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+	TSubclassOf<UDamageType> DamageTypeClass;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -36,9 +42,15 @@ public:
 	bool bAttack;
 	
 	bool bLaserOn;
+	bool bLaserHit;
+
+	class AMain* Target;
 
 	UFUNCTION()
-	virtual void LaserOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+	void LaserOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+
+	UFUNCTION()
+	void LaserOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	UFUNCTION()
 	void DestroyLaser();

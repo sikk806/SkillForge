@@ -7,6 +7,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "TimerManager.h"
+#include "AIController.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ALichLaser::ALichLaser()
@@ -15,7 +17,8 @@ ALichLaser::ALichLaser()
 	PrimaryActorTick.bCanEverTick = true;
 
 	bAttack = false;
-	bLaserOn = true;
+	bLaserOn = false;
+	bLaserHit = false;
 
 	Laser = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Laser"));
 	Laser->SetupAttachment(GetRootComponent());
@@ -34,8 +37,12 @@ void ALichLaser::BeginPlay()
 	Super::BeginPlay();
 	
 	Laser->OnComponentBeginOverlap.AddDynamic(this, &ALichLaser::LaserOverlapBegin);
+	Laser->OnComponentEndOverlap.AddDynamic(this, &ALichLaser::LaserOverlapEnd);
+
 	Laser->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	LaserWarning->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Target = nullptr;
 }
 
 // Called every frame
@@ -54,20 +61,40 @@ void ALichLaser::Tick(float DeltaTime)
 		if(NewScale.X > 16.f) 
 		{
 			NewScale.X = 16.f;
+			bLaserOn = true;
 		}
 		LaserWarning->SetWorldScale3D(NewScale);
+	}
+
+	if(bLaserHit)
+	{
+		if(Target != nullptr)	UGameplayStatics::ApplyDamage(Target, 0.2f, AIController, this, DamageTypeClass);
 	}
 
 }
 
 void ALichLaser::LaserOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
+	if(OtherActor && !bLaserHit)
+	{
+		AMain* Main = Cast<AMain>(OtherActor);
+		if(Main)
+		{
+			bLaserHit = true;
+			Target = Main;
+		}
+	}
+}
+
+void ALichLaser::LaserOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
 	if(OtherActor)
 	{
 		AMain* Main = Cast<AMain>(OtherActor);
 		if(Main)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("HIT"));
+			bLaserHit = false;
+			Target = nullptr;
 		}
 	}
 }
@@ -75,11 +102,12 @@ void ALichLaser::LaserOverlapBegin(UPrimitiveComponent* OverlappedComponent, AAc
 void ALichLaser::LaserOff()
 {
 	bLaserOn = false;
-	GetWorldTimerManager().SetTimer(LaserTimer, this, &ALichLaser::DestroyLaser, 2.f);
+	Laser->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	bAttack = false;
+	GetWorldTimerManager().SetTimer(LaserTimer, this, &ALichLaser::DestroyLaser, 1.25f);
 }
 
 void ALichLaser::DestroyLaser()
 {
-	bAttack = false;
 	Destroy();
 }

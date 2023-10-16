@@ -10,11 +10,12 @@
 #include "TimerManager.h"
 #include "AIController.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerController.h"
 
 // Sets default values
 AMainSwordFalling::AMainSwordFalling()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	SwordFall = CreateDefaultSubobject<UBoxComponent>(TEXT("SwordFall"));
@@ -43,9 +44,7 @@ void AMainSwordFalling::BeginPlay()
 	SwordFall->OnComponentEndOverlap.AddDynamic(this, &AMainSwordFalling::CombatOnOverlapEnd);
 
 	GetWorldTimerManager().SetTimer(SwordFallTimer, this, &AMainSwordFalling::DestroySelf, 3.0f);
-
-	
-	
+	GetWorldTimerManager().SetTimer(AttackMoveTimer, this, &AMainSwordFalling::AttackingFalse, 1.5f);
 }
 
 // Called every frame
@@ -53,53 +52,53 @@ void AMainSwordFalling::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if(bAttack)
+	if (bAttack)
 	{
 		SFTimer += DeltaTime;
-		if(SFTimer > 0.6f && (cntHit == 0))
+		if (SFTimer > 0.6f && (cntHit == 0))
 		{
 			cntHit = 1;
-			for (AActor* Target : HitTargetsSet)
+			for (AActor *Target : HitTargetsSet)
 			{
 				UGameplayStatics::ApplyDamage(Target, 10.f, AIController, this, DamageTypeClass);
 			}
 		}
-		else if(SFTimer > 0.8f && (cntHit == 1 || cntHit == 0))
+		else if (SFTimer > 0.8f && (cntHit == 1 || cntHit == 0))
 		{
 			cntHit = 2;
-			for (AActor* Target : HitTargetsSet)
+			for (AActor *Target : HitTargetsSet)
 			{
 				UGameplayStatics::ApplyDamage(Target, 10.f, AIController, this, DamageTypeClass);
 			}
 		}
-		else if(SFTimer > 1.f && (cntHit == 2 || cntHit == 0))
+		else if (SFTimer > 1.f && (cntHit == 2 || cntHit == 0))
 		{
 			cntHit = 3;
-			for (AActor* Target : HitTargetsSet)
+			for (AActor *Target : HitTargetsSet)
 			{
 				UGameplayStatics::ApplyDamage(Target, 10.f, AIController, this, DamageTypeClass);
 			}
 		}
-		else if(SFTimer > 1.2f && (cntHit == 3 || cntHit == 0))
+		else if (SFTimer > 1.2f && (cntHit == 3 || cntHit == 0))
 		{
 			cntHit = 4;
-			for (AActor* Target : HitTargetsSet)
+			for (AActor *Target : HitTargetsSet)
 			{
 				UGameplayStatics::ApplyDamage(Target, 10.f, AIController, this, DamageTypeClass);
 			}
 		}
-		else if(SFTimer > 1.4f && (cntHit == 4 || cntHit == 0))
+		else if (SFTimer > 1.4f && (cntHit == 4 || cntHit == 0))
 		{
 			cntHit = 5;
-			for (AActor* Target : HitTargetsSet)
+			for (AActor *Target : HitTargetsSet)
 			{
 				UGameplayStatics::ApplyDamage(Target, 10.f, AIController, this, DamageTypeClass);
 			}
 		}
-		else if(SFTimer > 2.1f && (cntHit == 5 || cntHit == 0))
+		else if (SFTimer > 2.1f && (cntHit == 5 || cntHit == 0))
 		{
 			cntHit = 6;
-			for (AActor* Target : HitTargetsSet)
+			for (AActor *Target : HitTargetsSet)
 			{
 				UGameplayStatics::ApplyDamage(Target, 50.f, AIController, this, DamageTypeClass);
 			}
@@ -109,27 +108,27 @@ void AMainSwordFalling::Tick(float DeltaTime)
 
 void AMainSwordFalling::DestroySelf()
 {
-    Destroy();
+	Destroy();
 }
 
-void AMainSwordFalling::CombatOnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+void AMainSwordFalling::CombatOnOverlapBegin(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-	if(OtherActor)
+	if (OtherActor)
 	{
-		AEnemy* Enemy = Cast<AEnemy>(OtherActor);
-		if(Enemy)
+		AEnemy *Enemy = Cast<AEnemy>(OtherActor);
+		if (Enemy)
 		{
 			HitTargetsSet.Add(Enemy);
 		}
 	}
 }
 
-void AMainSwordFalling::CombatOnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void AMainSwordFalling::CombatOnOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex)
 {
-	if(OtherActor)
+	if (OtherActor)
 	{
-		AEnemy* Enemy = Cast<AEnemy>(OtherActor);
-		if(Enemy)
+		AEnemy *Enemy = Cast<AEnemy>(OtherActor);
+		if (Enemy)
 		{
 			if (HitTargetsSet.Contains(Enemy))
 			{
@@ -139,4 +138,18 @@ void AMainSwordFalling::CombatOnOverlapEnd(UPrimitiveComponent* OverlappedCompon
 	}
 }
 
-
+void AMainSwordFalling::AttackingFalse()
+{
+	if (bAttack)
+	{
+		APlayerController *MainController = GetWorld()->GetFirstPlayerController();
+		if (MainController)
+		{
+			AMain *Main = Cast<AMain>(MainController->GetPawn());
+			if (Main)
+			{
+				Main->bAttacking = false;
+			}
+		}
+	}
+}
