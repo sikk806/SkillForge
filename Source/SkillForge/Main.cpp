@@ -8,6 +8,7 @@
 #include "MainSwordFalling.h"
 #include "MainBuff.h"
 #include "Sword.h"
+#include "Weapon.h"
 
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"

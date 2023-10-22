@@ -8,7 +8,7 @@ public class SkillForge : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "AIModule", "Niagara"});
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "AIModule", "Niagara", "MovieScene", "LevelSequence"});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

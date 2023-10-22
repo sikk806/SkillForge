@@ -17,6 +17,10 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "LevelSequence.h"
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
+#include "MovieScene.h"
 
 ALich::ALich()
 {
@@ -26,6 +30,7 @@ ALich::ALich()
 	bAttack = false;
 	bDoSkill = false;
 	bIsCombatOverlapping = false;
+	bSwrodPattern = false;
 
 	MaxHealth = 1000;
 	Health = 1000;
@@ -53,6 +58,12 @@ void ALich::BeginPlay()
 void ALich::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (Health < MaxHealth && !bSwrodPattern)
+	{
+		bSwrodPattern = true;
+		CutScene();
+	}
 
 	if (Alive())
 	{
@@ -170,7 +181,6 @@ void ALich::AgroSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent, A
 			AMain *Main = Cast<AMain>(OtherActor);
 			if (Main)
 			{
-
 			}
 		}
 	}
@@ -305,13 +315,13 @@ void ALich::Attack()
 {
 	SetDoSkill(false);
 	if (bOverlappingCombatSphere)
-    {
-        AMain* Main = Cast<AMain>(CombatTarget);
-        if (Main)
-        {
-            MoveToTarget(Main);
-        }
-    }
+	{
+		AMain *Main = Cast<AMain>(CombatTarget);
+		if (Main)
+		{
+			MoveToTarget(Main);
+		}
+	}
 	GetWorldTimerManager().ClearTimer(AttackTimer);
 }
 
@@ -322,10 +332,10 @@ void ALich::AttackEnd()
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 	if (bOverlappingCombatSphere)
 	{
-		//SetDoSkill(false);
+		// SetDoSkill(false);
 		float AttackTime = FMath::FRandRange(1.5f, 2.5f);
 		// SetTimer(FTimerHandle, this, function, Time(float))
-		
+
 		GetWorldTimerManager().SetTimer(AttackTimer, this, &ALich::Attack, AttackTime);
 	}
 }
@@ -347,5 +357,15 @@ void ALich::FourWave()
 		}
 		GetWorldTimerManager().SetTimer(WaveTime, this, &ALich::FourWave, 0.25f);
 		WaveCnt++;
+	}
+}
+
+void ALich::CutScene()
+{
+	FMovieSceneSequencePlaybackSettings Settings;
+	if (LevelSequence)
+	{
+		ULevelSequencePlayer *LevelSequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), LevelSequence, Settings, LevelSequenceActor);
+		LevelSequencePlayer->Play();
 	}
 }

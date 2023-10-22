@@ -29,6 +29,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
 	TSubclassOf<class ALichWave> Wave;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
+	class ULevelSequence* LevelSequence;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
+	class ALevelSequenceActor* LevelSequenceActor;
+
 	float DeadLichValue;
 
 protected:
@@ -67,6 +73,9 @@ public:
 	FTimerHandle WaveTime;
 	void FourWave();
 	int WaveCnt;
+
+	bool bSwrodPattern;
+	void CutScene();
 
 
 

@@ -140,10 +140,8 @@ void AEnemy::MoveToTarget(class AMain *Target)
 	if (Alive() && EnemyMovementState != EEnemyMovementState::EMS_Death)
 	{
 		SetEnemyMovementState(EEnemyMovementState::EMS_MoveToTarget);
-		UE_LOG(LogTemp, Warning, TEXT("fdsafdsfasdfdsa"));
 		if (AIController)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("HIHIHI"));
 			FAIMoveRequest MoveRequest;
 			MoveRequest.SetGoalActor(Target);
 			MoveRequest.SetAcceptanceRadius(25.f);
