@@ -74,7 +74,11 @@ public:
 	void FourWave();
 	int WaveCnt;
 
-	bool bSwrodPattern;
+	void LichSword();
+
+	bool bSwordPattern;
+	bool bDoingPattern; 
+	FTimerHandle PatternTime;
 	void CutScene();
 
 

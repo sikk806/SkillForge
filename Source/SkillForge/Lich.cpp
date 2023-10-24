@@ -30,7 +30,8 @@ ALich::ALich()
 	bAttack = false;
 	bDoSkill = false;
 	bIsCombatOverlapping = false;
-	bSwrodPattern = false;
+	bSwordPattern = false;
+	bDoingPattern = false;
 
 	MaxHealth = 1000;
 	Health = 1000;
@@ -59,13 +60,15 @@ void ALich::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (Health < MaxHealth && !bSwrodPattern)
+	if(Health < MaxHealth && !bSwordPattern && !bDoingPattern)
 	{
-		bSwrodPattern = true;
-		CutScene();
+		bSwordPattern = true;
+		bDoingPattern = true;
+		
+		//GetWorldTimerManager().SetTimer(HitWaveTimer, this, &ALich::LichSword, 0.5f);
 	}
 
-	if (Alive())
+	if (Alive() && !bDoingPattern)
 	{
 		if (bIsCombatOverlapping)
 		{
@@ -173,7 +176,7 @@ void ALich::Tick(float DeltaTime)
 
 void ALich::AgroSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-	if (Alive())
+	if (Alive() && !bDoingPattern)
 	{
 		Super::AgroSphereOnOverlapBegin(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 		if (OtherActor)
@@ -188,7 +191,7 @@ void ALich::AgroSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent, A
 
 void ALich::AgroSphereOnOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex)
 {
-	if (Alive())
+	if (Alive() && !bDoingPattern)
 	{
 		Super::AgroSphereOnOverlapEnd(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
 	}
@@ -196,7 +199,7 @@ void ALich::AgroSphereOnOverlapEnd(UPrimitiveComponent *OverlappedComponent, AAc
 
 void ALich::CombatSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-	if (Alive())
+	if (Alive() && !bDoingPattern)
 	{
 		Super::CombatSphereOnOverlapBegin(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 		if (OtherActor)
@@ -296,7 +299,7 @@ void ALich::CombatSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent,
 
 void ALich::CombatSphereOnOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex)
 {
-	if (Alive())
+	if (Alive() && !bDoingPattern)
 	{
 		Super::CombatSphereOnOverlapEnd(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
 		if (OtherActor)
@@ -360,12 +363,20 @@ void ALich::FourWave()
 	}
 }
 
+void ALich::LichSword()
+{
+
+}
+
 void ALich::CutScene()
 {
-	FMovieSceneSequencePlaybackSettings Settings;
-	if (LevelSequence)
+	if( !bDoingPattern)
 	{
-		ULevelSequencePlayer *LevelSequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), LevelSequence, Settings, LevelSequenceActor);
-		LevelSequencePlayer->Play();
+		FMovieSceneSequencePlaybackSettings Settings;
+		if (LevelSequence)
+		{
+			ULevelSequencePlayer *LevelSequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), LevelSequence, Settings, LevelSequenceActor);
+			LevelSequencePlayer->Play();
+		}
 	}
 }
