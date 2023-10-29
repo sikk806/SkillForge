@@ -11,12 +11,14 @@
 #include "Weapon.h"
 
 #include "Animation/AnimInstance.h"
+#include "CoreMinimal.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/Character.h"
 #include "GameFramework/Controller.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Engine/EngineTypes.h"
@@ -77,6 +79,9 @@ AMain::AMain()
 	bInterpToEnemy = false;
 
 	SwordBuff = nullptr;
+
+	bCutScene = false;
+	SceneTime = 0.f;
 }
 
 // Called when the game starts or when spawned
@@ -106,6 +111,12 @@ void AMain::BeginPlay()
 void AMain::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if(bCutScene && SceneTime < 2.f)
+	{
+		SceneTime += DeltaTime;
+		MoveForward(1.f);
+	}
 
 	/* 1. Warrior Iden : Roll
 	Roll Can Avoid Monster's Attack. But using the roll reduces the identity of 30.
@@ -311,7 +322,7 @@ void AMain::ZoomCamera(float Value)
 void AMain::MoveForward(float Value)
 {
 	ForwardValue = Value;
-	if (Controller != nullptr && Value != 0.f && !bSpaceKeyDown && !bAttacking)
+	if (Controller != nullptr && Value != 0.f && !bSpaceKeyDown && !bAttacking && !bCutScene)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
@@ -329,12 +340,21 @@ void AMain::MoveForward(float Value)
 
 		AddMovementInput(Direction, FV);
 	}
+	else if(bCutScene)
+	{
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+
+		FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+		AddMovementInput(Direction, Value);
+	}
 }
 
 void AMain::MoveRight(float Value)
 {
 	RightValue = Value;
-	if (Controller != nullptr && Value != 0.f && !bSpaceKeyDown && !bAttacking)
+	if (Controller != nullptr && Value != 0.f && !bSpaceKeyDown && !bAttacking  && !bCutScene)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
@@ -355,7 +375,7 @@ void AMain::MoveRight(float Value)
 
 void AMain::LookUpRate(float rate)
 {
-	if (!bSpaceKeyDown && !bAttacking)
+	if (!bSpaceKeyDown && !bAttacking && !bCutScene)
 	{
 		float CameraPitch = GetControlRotation().Pitch;
 		float NewCameraPitch = CameraPitch + rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds();
@@ -377,7 +397,7 @@ void AMain::LookUpRate(float rate)
 
 void AMain::TurnRate(float rate)
 {
-	if (!bSpaceKeyDown && !bAttacking)
+	if (!bSpaceKeyDown && !bAttacking && !bCutScene)
 	{
 		AddControllerYawInput(rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 	}
@@ -662,6 +682,7 @@ void AMain::SwordFallSkillBegin()
 {
 	FVector StartLocation = GetActorLocation();
 	FRotator ActorRotation = GetActorRotation();
+
 
 	FVector ForwardVector = ActorRotation.Vector().GetSafeNormal();
 	AMainSwordFalling *MainSwordFalling = GetWorld()->SpawnActor<AMainSwordFalling>(SwordFallBegin, StartLocation, GetActorRotation());

@@ -251,6 +251,13 @@ public:
 	bool bInterpToEnemy;
 	void SetInterpToEnemy(bool Interp);
 
+	// cutScene
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CutScene")
+	bool bCutScene;
+
+	float SceneTime;
+
+
 	// ect.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Particles")
 	class UParticleSystem* HitParticles;
@@ -263,4 +270,5 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	float GetCombatTargetMaxHealth();
+
 };

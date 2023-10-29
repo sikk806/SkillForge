@@ -6,6 +6,7 @@
 #include "LichSkull.h"
 #include "LichWind.h"
 #include "LichWave.h"
+#include "EnterDoorTrigger.h"
 
 #include "AIController.h"
 #include "Components/CapsuleComponent.h"
@@ -27,11 +28,15 @@ ALich::ALich()
 	PointLightComponent = CreateDefaultSubobject<UPointLightComponent>(TEXT("PointLight"));
 	PointLightComponent->SetupAttachment(GetRootComponent());
 
+	AppearanceParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("AppearanceParticle"));
+	AppearanceParticle->SetupAttachment(GetRootComponent());
+
 	bAttack = false;
 	bDoSkill = false;
 	bIsCombatOverlapping = false;
 	bSwordPattern = false;
 	bDoingPattern = false;
+	bAppearance = true;
 
 	MaxHealth = 1000;
 	Health = 1000;
@@ -49,26 +54,30 @@ void ALich::BeginPlay()
 
 	EnemyMovementState = EEnemyMovementState::EMS_Idle;
 
+	AppearanceParticle->Deactivate();
+
 	AgroSphere->OnComponentBeginOverlap.AddDynamic(this, &ALich::AgroSphereOnOverlapBegin);
 	AgroSphere->OnComponentEndOverlap.AddDynamic(this, &ALich::AgroSphereOnOverlapEnd);
 
 	CombatSphere->OnComponentBeginOverlap.AddDynamic(this, &ALich::CombatSphereOnOverlapBegin);
 	CombatSphere->OnComponentEndOverlap.AddDynamic(this, &ALich::CombatSphereOnOverlapEnd);
+
+	Appearance();
 }
 
 void ALich::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if(Health < MaxHealth && !bSwordPattern && !bDoingPattern)
+	if (Health < MaxHealth && !bSwordPattern && !bDoingPattern && !bAppearance)
 	{
 		bSwordPattern = true;
 		bDoingPattern = true;
-		
-		//GetWorldTimerManager().SetTimer(HitWaveTimer, this, &ALich::LichSword, 0.5f);
+
+		GetWorldTimerManager().SetTimer(PatternTime, this, &ALich::LichSword, 0.5f);
 	}
 
-	if (Alive() && !bDoingPattern)
+	if (Alive() && !bDoingPattern && !bAppearance)
 	{
 		if (bIsCombatOverlapping)
 		{
@@ -144,7 +153,7 @@ void ALich::Tick(float DeltaTime)
 		}
 	}
 
-	if (!Alive())
+	if (!Alive() && !bAppearance)
 	{
 
 		USkeletalMeshComponent *MeshComponent = FindComponentByClass<USkeletalMeshComponent>();
@@ -176,7 +185,7 @@ void ALich::Tick(float DeltaTime)
 
 void ALich::AgroSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-	if (Alive() && !bDoingPattern)
+	if (Alive() && !bDoingPattern && !bAppearance)
 	{
 		Super::AgroSphereOnOverlapBegin(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 		if (OtherActor)
@@ -191,7 +200,7 @@ void ALich::AgroSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent, A
 
 void ALich::AgroSphereOnOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex)
 {
-	if (Alive() && !bDoingPattern)
+	if (Alive() && !bDoingPattern && !bAppearance)
 	{
 		Super::AgroSphereOnOverlapEnd(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
 	}
@@ -199,7 +208,7 @@ void ALich::AgroSphereOnOverlapEnd(UPrimitiveComponent *OverlappedComponent, AAc
 
 void ALich::CombatSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-	if (Alive() && !bDoingPattern)
+	if (Alive() && !bDoingPattern && !bAppearance)
 	{
 		Super::CombatSphereOnOverlapBegin(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 		if (OtherActor)
@@ -299,7 +308,7 @@ void ALich::CombatSphereOnOverlapBegin(UPrimitiveComponent *OverlappedComponent,
 
 void ALich::CombatSphereOnOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex)
 {
-	if (Alive() && !bDoingPattern)
+	if (Alive() && !bDoingPattern && !bAppearance)
 	{
 		Super::CombatSphereOnOverlapEnd(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
 		if (OtherActor)
@@ -365,18 +374,40 @@ void ALich::FourWave()
 
 void ALich::LichSword()
 {
-
 }
 
 void ALich::CutScene()
 {
-	if( !bDoingPattern)
+	if (!bDoingPattern)
 	{
-		FMovieSceneSequencePlaybackSettings Settings;
-		if (LevelSequence)
-		{
-			ULevelSequencePlayer *LevelSequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), LevelSequence, Settings, LevelSequenceActor);
-			LevelSequencePlayer->Play();
-		}
 	}
+}
+
+void ALich::Appearance()
+{
+	FRotator Rot = GetActorRotation();
+	Rot.Yaw += 180.f;
+	SetActorRotation(Rot);
+	AppearanceParticle->Activate();
+	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && AppearanceMontage && bAppearance)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Check"));
+		AnimInstance->Montage_Play(AppearanceMontage, 0.5f);
+		AnimInstance->Montage_JumpToSection(FName("Appearance"), AppearanceMontage);
+	}
+	else if(AnimInstance && AppearanceMontage && !bAppearance)
+	{
+		AnimInstance->Montage_Play(AppearanceMontage, -0.5f);
+		AnimInstance->Montage_JumpToSection(FName("DisAppearance"), AppearanceMontage);
+	}
+
+	FTimerHandle AppearanceTime;
+	GetWorldTimerManager().SetTimer(AppearanceTime, this, &ALich::SetBoolAppearance, 2.f);
+}
+
+void ALich::SetBoolAppearance()
+{
+	if(bAppearance) bAppearance = false;
+	else if(!bAppearance) bAppearance = true;
 }

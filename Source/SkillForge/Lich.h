@@ -35,6 +35,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
 	class ALevelSequenceActor* LevelSequenceActor;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skills")
+	class UParticleSystemComponent* AppearanceParticle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CutScene")
+	class AEnterDoorTrigger* EnterDoorTrigger;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	class UAnimMontage* AppearanceMontage;
+
 	float DeadLichValue;
 
 protected:
@@ -80,6 +89,13 @@ public:
 	bool bDoingPattern; 
 	FTimerHandle PatternTime;
 	void CutScene();
+
+	void Appearance();
+
+	void SetBoolAppearance();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Appearance")
+	bool bAppearance;
 
 
 
