@@ -35,8 +35,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="SkeletalMesh")
 	class USkeletalMeshComponent* SkeletalMesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon | Combat")
-	class UBoxComponent* CombatCollision;
+	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon | Combat")
+	// class UBoxComponent* CombatCollision;
 
 	// PickUP State
 	virtual void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult) override;
@@ -50,11 +50,11 @@ public:
 	UFUNCTION()
 	void CombatOnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	UFUNCTION(BlueprintCallable)
-	void ActivateCollision();
+	// UFUNCTION(BlueprintCallable)
+	// void ActivateCollision();
 
-	UFUNCTION(BlueprintCallable)
-	void DeactivateCollision();
+	// UFUNCTION(BlueprintCallable)
+	// void DeactivateCollision();
 	
 	void Equip(class AMain* Char);
 	

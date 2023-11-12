@@ -86,15 +86,15 @@ void ASword::CombatOnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor
 
 }
 
-void ASword::ActivateCollision()
-{
-    CombatCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-}
+// void ASword::ActivateCollision()
+// {
+//     CombatCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+// }
 
-void ASword::DeactivateCollision()
-{
-    CombatCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-}
+// void ASword::DeactivateCollision()
+// {
+//     CombatCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+// }
 
 // For attach Character Socket	
 void ASword::Equip(class AMain* Char)

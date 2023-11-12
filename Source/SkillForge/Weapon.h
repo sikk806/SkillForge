@@ -34,6 +34,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item | Waepon")
 	class UParticleSystem* OverlapParticle;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon | Combat")
+	class UBoxComponent* CombatCollision;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item | Waepon")
 	class USoundCue* OverlapSound;
 
@@ -63,5 +66,11 @@ public:
 	
 	UFUNCTION()
 	virtual void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	UFUNCTION(BlueprintCallable)
+	void ActivateCollision();
+
+	UFUNCTION(BlueprintCallable)
+	void DeactivateCollision();
 
 };

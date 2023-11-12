@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Weapon.h"
 #include "Enemy.h"
 #include "Components/SphereComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -13,7 +13,7 @@
 // Sets default values
 AWeapon::AWeapon()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	CollisionVolume = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionVolume"));
@@ -24,7 +24,6 @@ AWeapon::AWeapon()
 
 	IdleParticleComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("IdleParticleComponent"));
 	IdleParticleComponent->SetupAttachment(GetRootComponent());
-
 }
 
 // Called when the game starts or when spawned
@@ -34,31 +33,42 @@ void AWeapon::BeginPlay()
 
 	CollisionVolume->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnOverlapBegin);
 	CollisionVolume->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnOverlapEnd);
-	
 }
 
 // Called every frame
 void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
-
 }
 
-void AWeapon::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+void AWeapon::OnOverlapBegin(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-	if(OtherActor)
+	if (OtherActor)
 	{
-		AEnemy* Enemy = Cast<AEnemy>(OtherActor);
-		if(Enemy)
+		AEnemy *Enemy = Cast<AEnemy>(OtherActor);
+		if (Enemy)
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("Attack!"));
-		}
-;	}
+			// UE_LOG(LogTemp, Warning, TEXT("Attack!"));
+		};
+	}
 }
 
-void AWeapon::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void AWeapon::OnOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex)
 {
-
 }
 
+void AWeapon::ActivateCollision()
+{
+	if (CombatCollision)
+	{
+		CombatCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+}
+
+void AWeapon::DeactivateCollision()
+{
+	if (CombatCollision)
+	{
+		CombatCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
