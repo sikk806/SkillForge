@@ -39,7 +39,7 @@ public:
 
 	// Equipped Setting
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Items")
-	class ASword* EquippedSword;
+	class AWeapon* EquippedWeapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* SpringArm;
@@ -71,7 +71,7 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() { return FollowCamera; }
 
 	// Equipped Setting
-	FORCEINLINE void SetEquippedWeapon(ASword* WeaponToSet) {EquippedSword = WeaponToSet;}
+	FORCEINLINE void SetEquippedWeapon(AWeapon* WeaponToSet) {EquippedWeapon = WeaponToSet;}
 
 	void ZoomCamera(float Value);
 

@@ -30,6 +30,9 @@ public:
 	TSubclassOf<class ALichWave> Wave;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
+	TSubclassOf<class ALichSwordPattern> Sword;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")
 	class ULevelSequence* LevelSequence;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Skills")

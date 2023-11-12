@@ -69,12 +69,19 @@ void ALich::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (Health < MaxHealth && !bSwordPattern && !bDoingPattern && !bAppearance)
+	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+	if (Health < MaxHealth / 2 && !bSwordPattern && !bDoingPattern && !bAppearance)
 	{
 		bSwordPattern = true;
 		bDoingPattern = true;
 
-		GetWorldTimerManager().SetTimer(PatternTime, this, &ALich::LichSword, 0.5f);
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(AppearanceMontage, 1.0f);
+			AnimInstance->Montage_JumpToSection(FName("DisAppearance"), AppearanceMontage);
+		}
+
+		GetWorldTimerManager().SetTimer(PatternTime, this, &ALich::LichSword, 2.f);
 	}
 
 	if (Alive() && !bDoingPattern && !bAppearance)
@@ -87,7 +94,6 @@ void ALich::Tick(float DeltaTime)
 				bAttack = true;
 				SetEnemyMovementState(EEnemyMovementState::EMS_Attack);
 
-				UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
 				if (AnimInstance && CombatMontage)
 				{
 					int32 SkillNum = FMath::RandRange(0, 3);
@@ -326,6 +332,7 @@ void ALich::CombatSphereOnOverlapEnd(UPrimitiveComponent *OverlappedComponent, A
 void ALich::Attack()
 {
 	SetDoSkill(false);
+	bAttack = false;
 	if (bOverlappingCombatSphere)
 	{
 		AMain *Main = Cast<AMain>(CombatTarget);
@@ -339,7 +346,6 @@ void ALich::Attack()
 
 void ALich::AttackEnd()
 {
-	bAttack = false;
 	SetEnemyMovementState(EEnemyMovementState::EMS_Idle);
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 	if (bOverlappingCombatSphere)
@@ -374,12 +380,26 @@ void ALich::FourWave()
 
 void ALich::LichSword()
 {
+	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && AppearanceMontage)
+	{
+		AnimInstance->Montage_Play(AppearanceMontage, 0.5f);
+		AnimInstance->Montage_JumpToSection(FName("Appearance"), AppearanceMontage);
+		AnimInstance->Montage_Pause(AppearanceMontage);
+		SetActorLocation(FVector(29170.f, 5235.f, 2720.f));
+		SetActorRotation(FRotator(0.f, -180.f, 0.f));
+		AnimInstance->Montage_Resume(AppearanceMontage);
+		bDoingPattern = true;
+		bAppearance = true;
+		
+	}
 }
 
 void ALich::CutScene()
 {
 	if (!bDoingPattern)
 	{
+
 	}
 }
 
@@ -392,14 +412,8 @@ void ALich::Appearance()
 	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && AppearanceMontage && bAppearance)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Check"));
 		AnimInstance->Montage_Play(AppearanceMontage, 0.5f);
 		AnimInstance->Montage_JumpToSection(FName("Appearance"), AppearanceMontage);
-	}
-	else if(AnimInstance && AppearanceMontage && !bAppearance)
-	{
-		AnimInstance->Montage_Play(AppearanceMontage, -0.5f);
-		AnimInstance->Montage_JumpToSection(FName("DisAppearance"), AppearanceMontage);
 	}
 
 	FTimerHandle AppearanceTime;
@@ -408,6 +422,8 @@ void ALich::Appearance()
 
 void ALich::SetBoolAppearance()
 {
-	if(bAppearance) bAppearance = false;
-	else if(!bAppearance) bAppearance = true;
+	if (bAppearance)
+		bAppearance = false;
+	else if (!bAppearance)
+		bAppearance = true;
 }

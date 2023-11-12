@@ -44,6 +44,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | Combat")
 	AController* WeaponInstigator;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Combat")
+	float Damage;
+
 	FORCEINLINE void SetInstigator(AController* Inst) {WeaponInstigator = Inst;}
 
 

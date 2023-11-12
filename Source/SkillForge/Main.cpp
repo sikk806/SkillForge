@@ -29,9 +29,6 @@ AMain::AMain()
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	SwordBuff = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("StingParticle"));
-	SwordBuff->SetupAttachment(GetRootComponent());
-
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	SpringArm->SetupAttachment(GetRootComponent());
 	SpringArm->TargetArmLength = 1000.f;
@@ -44,9 +41,14 @@ AMain::AMain()
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 540.f, 0.f);
 
+	SwordBuff = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("StingParticle"));
+	SwordBuff->SetupAttachment(GetRootComponent());
+
+	// Keep Forward Vector and Right Vector
 	FV = 0;
 	RV = 0;
 
+	// Status
 	MaxHealth = 100;
 	Health = 100;
 
@@ -59,9 +61,11 @@ AMain::AMain()
 	MP = 100;
 	DrainMPRate = 5;
 
+	// Camera Setting
 	BaseLookUpRate = 55.f;
 	BaseTurnRate = 55.f;
 
+	// Speed Idle, Run, Roll
 	WalkSpeed = 300.f;
 	RunSpeed = 450.f;
 	RollSpeed = 600.f;
@@ -69,6 +73,7 @@ AMain::AMain()
 	// 0.0f ~ 1.0f
 	BuffDecrementDamage = 1.0f;
 
+	// For Right Attack
 	ContinAttack = FName("AttackA2");
 	bLMBDown = false;
 	bRMBDown = false;
@@ -481,8 +486,8 @@ void AMain::LMBDown()
 		bLMBDown = true;
 		
 		ContinAttack = FName("AttackA2");
-		if(EquippedSword)
-			EquippedSword->Damage = 10.f;
+		if(EquippedWeapon)
+			EquippedWeapon->Damage = 10.f;
 		Attack();
 	}
 }
@@ -510,14 +515,14 @@ void AMain::RMBUp()
 	{
 		bRMBDown = false;
 		ContinAttack = FName("AttackA2");
-		if(EquippedSword)
-			EquippedSword->Damage = 10.f;
+		if(EquippedWeapon)
+			EquippedWeapon->Damage = 10.f;
 	}
 }
 
 void AMain::Attack()
 {
-	if (!bAttacking && EquippedSword)
+	if (!bAttacking && EquippedWeapon)
 	{
 		bAttacking = true;
 		SetInterpToEnemy(true);
@@ -528,7 +533,7 @@ void AMain::Attack()
 		{
 			if (bLMBDown)
 			{
-				EquippedSword->Damage = 10.f;
+				EquippedWeapon->Damage = 10.f;
 				AnimInstance->Montage_Play(CombatMontage, 2.f);
 				AnimInstance->Montage_JumpToSection(FName("AttackA1"), CombatMontage);
 			}
@@ -546,22 +551,22 @@ void AMain::AttackEnd()
 	bAttacking = false;
 	if (bLMBDown || bRMBDown)
 	{
-		if (bRMBDown && EquippedSword)
+		if (bRMBDown && EquippedWeapon)
 		{
 			if (ContinAttack == FName("AttackA2"))
 			{
 				ContinAttack = FName("AttackA3");
-				EquippedSword->Damage = 15.f;
+				EquippedWeapon->Damage = 15.f;
 			}
 			else if (ContinAttack == FName("AttackA3"))
 			{
 				ContinAttack = FName("AttackA4");
-				EquippedSword->Damage = 20.f;
+				EquippedWeapon->Damage = 20.f;
 			}
 			else if (ContinAttack == FName("AttackA4"))
 			{
 				ContinAttack = FName("AttackA2");
-				EquippedSword->Damage = 10.f;
+				EquippedWeapon->Damage = 10.f;
 			}
 		}
 		Attack();
@@ -611,7 +616,7 @@ void AMain::Die()
 // SKills
 void AMain::QSkill()
 {
-	if (EquippedSword && !bAttacking)
+	if (EquippedWeapon && !bAttacking)
 	{
 		UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
 
@@ -631,7 +636,7 @@ void AMain::QSkill()
 
 void AMain::ESkill()
 {
-	if (EquippedSword && !bAttacking)
+	if (EquippedWeapon && !bAttacking)
 	{
 		UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
 
@@ -651,7 +656,7 @@ void AMain::ESkill()
 
 void AMain::RSkill()
 {
-	if (EquippedSword && !bAttacking)
+	if (EquippedWeapon && !bAttacking)
 	{
 		UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
 
